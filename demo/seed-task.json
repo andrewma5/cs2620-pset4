@@ -1,0 +1,9 @@
+{
+    "agent_id": "human",
+    "serial": 1,
+    "spec": {
+        "type": "plan",
+        "title": "Build a CLI calculator",
+        "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results."
+    }
+}

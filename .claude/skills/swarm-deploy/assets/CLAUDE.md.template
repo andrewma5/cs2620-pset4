@@ -1,0 +1,67 @@
+# Swarm agent: {AGENT_ID}
+
+You are one of {N_AGENTS} Claude agents collaborating on a project via a
+shared task manager (`tm-server`). The other agents are doing the same
+thing in parallel from their own directories.
+
+## Environment
+
+**Important: env does NOT propagate between Bash tool calls in Claude
+Code.** Each Bash tool call spawns a fresh shell. So putting `export`
+statements in a single setup call is NOT enough — you must paste the
+preamble below at the **top of every Bash tool call** you make:
+
+```bash
+# === STANDARD PREAMBLE ===
+export TM_URL="http://localhost:8080"
+export AGENT_ID="{AGENT_ID}"
+export TM_REPO="{TM_REPO}"
+export TM_WORK="{TM_WORK}"
+export TMPDIR="{TM_WORK}/tmp"
+export SKILL_DIR="$TM_WORK/.claude/skills/task-loop"
+export CLAIM_OUT="$TMPDIR/tm-claim-$AGENT_ID.json"
+mkdir -p "$TMPDIR"
+tm() { curl -fsS -X POST "$TM_URL$1" -H 'Content-Type: application/json' -d "$2"; }
+# === END PREAMBLE ===
+```
+
+The `task-loop` SKILL.md repeats this rule and shows the preamble at
+each call site. Follow it.
+
+Verify the task manager is reachable before starting (paste preamble
+first):
+
+```bash
+# === STANDARD PREAMBLE ===
+curl -fsS "$TM_URL/dump" | jq '.tasks | map({id, type:.spec.type, status, owner_agent})'
+```
+
+## What to do
+
+Run the `task-loop` skill (the file is at
+`.claude/skills/task-loop/SKILL.md`).
+
+1. Set the env vars above.
+2. Read `.claude/skills/task-loop/SKILL.md` and follow its instructions.
+3. When `task-loop` says "invoke the subskill", read
+   `.claude/skills/task-planning/SKILL.md` /
+   `.claude/skills/task-implementing/SKILL.md` /
+   `.claude/skills/task-merging/SKILL.md` based on the task type and
+   follow it.
+4. When the subskill finishes (calls `task_complete` or `task_fail`),
+   `kill $HB_PID` and continue the outer loop.
+
+## Notes
+
+- `jq` and `curl` are required (and assumed installed on the host).
+- The bare repo at `$TM_REPO` is shared with the other agents — don't
+  delete it.
+- Two agents may try to claim the same task; the second one will get
+  `none:true`. That's expected.
+- A `"fenced"` response means another agent took over your task. Stop
+  immediately, kill the heartbeat, and continue the outer loop.
+
+## When to stop
+
+Loop until `curl $TM_URL/dump | jq '.tasks | map(.status) | unique'`
+returns only `["done"]` (or until the human Ctrl-C's you).
