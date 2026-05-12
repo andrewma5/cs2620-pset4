@@ -41,6 +41,25 @@ is still a pure function. It's now driven through a paxos engine that:
 | `scripts/docker-failure-sweep.sh` | docker sweep — 20 runs across 4 scenarios |
 | `scripts/synthetic-agent.sh` | free bash agents (no Claude $) for demo dry-run |
 
+## First-time setup (after `git pull` of the paxos-ified branch)
+
+```bash
+# 1. Local docker-compose env (machine-specific UID/GID).
+cp .env.example .env
+# Edit UID and GID inside to match your host user — find them with
+# `id -u` and `id -g`. Skipping the edit usually works on Linux/WSL
+# (shell exports UID anyway) but is cleanest done explicitly.
+
+# 2. Rebuild from scratch (stale CMakeCache from prior shells is the
+#    most common gotcha — different absolute paths poison build/).
+rm -rf build
+
+# 3. Build inside the cs2620:latest dev shell (the binaries are Linux
+#    ELF; `build/tm-server` won't run on the macOS/Windows host).
+make
+make check       # 31 SM unit tests — must stay green; the safety net
+```
+
 ## Build
 
 Run inside `cs2620:latest` (the bind-mounted `build/` outputs Linux ELF):
