@@ -127,15 +127,32 @@ demo-deploy:
 	    echo "  agent-$$i pinned to http://localhost:$$port"; \
 	done
 
-# Wait for any replica to respond on /dump (up to 30s), then POST the seed.
+# Wait for paxos quorum, then POST the seed.
+#
+# The /dump check below only proves the HTTP server is alive — it doesn't
+# touch paxos. After a rapid teardown+restart, /dump can answer before the
+# inter-replica TCP mesh has reformed, so a seed POST issued at that
+# moment blocks forever waiting for quorum. We poll task_list (read-only
+# but goes through propose-and-apply) with a short per-try timeout to
+# detect when quorum is actually ready. Then the seed gets a bounded
+# --max-time so a stuck cluster fails loud instead of hanging.
 demo-seed:
 	@for i in $$(seq 1 30); do \
 	    if curl -fsS $(DEMO_R0)/dump > /dev/null 2>&1; then \
-	        echo "replica-0 ready"; break; \
+	        echo "replica-0 HTTP ready"; break; \
 	    fi; \
 	    sleep 1; \
 	done
-	curl -fsSL -X POST $(DEMO_R0)/task_create \
+	@for i in $$(seq 1 15); do \
+	    if curl -fsS --max-time 2 -X POST $(DEMO_R0)/task_list \
+	        -H 'Content-Type: application/json' \
+	        -d '{"agent_id":"_readiness","serial":'$$i'}' \
+	        > /dev/null 2>&1; then \
+	        echo "paxos quorum ready"; break; \
+	    fi; \
+	    sleep 1; \
+	done
+	curl -fsSL --max-time 30 -X POST $(DEMO_R0)/task_create \
 	    -H 'Content-Type: application/json' \
 	    -d @$(CURDIR)/seed-task.json | jq .
 
