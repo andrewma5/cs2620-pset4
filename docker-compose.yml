@@ -1,0 +1,99 @@
+# pset4 demo: 3 paxos replicas in containers, agents run on the host.
+#
+# Networking:
+#   - Each replica listens on container port 8080 (HTTP) + 9000 (paxos TCP).
+#   - HTTP ports map to host 8081/8082/8083 so they don't clash with bare-metal
+#     dev on 8080. Paxos port 9000 stays internal to the compose network.
+#   - Service names `replica-0/1/2` double as DNS hostnames for inter-replica
+#     paxos messages (e.g. `replica-1:9000`).
+#   - `--http-peers` uses host-mapped URLs (http://localhost:8081/8082/8083)
+#     so 307 leader-redirects are followable from clients on the host
+#     (agents + curl). Internal `replica-N:8080` URLs would resolve inside
+#     the compose network but not from Annie's macOS shell.
+#
+# Bind-mount strategy:
+#   - The entire `pset4-active/` dir is mounted read-write at /work/pset4-active.
+#     The existing `build/tm-server` (already Linux ELF — Annie's been building
+#     inside cs2620:latest) is what the replicas execute. Logs land in
+#     `pset4-active/logs/tm-N.log` on the host.
+#   - Container UID:GID = host UID:GID (via .env) so files stay host-owned.
+#
+# Project name & network:
+#   - COMPOSE_PROJECT_NAME=pset4demo (.env) → network is `pset4demo_default`,
+#     referenced by `make demo-partition-N` / `demo-reconnect-N`.
+
+services:
+  replica-0:
+    image: cs2620:latest
+    pull_policy: never
+    user: "${UID}:${GID}"
+    working_dir: /work/pset4-active
+    volumes:
+      - ./:/work/pset4-active
+    ports:
+      - "8081:8080"
+    command:
+      - bash
+      - -c
+      - |
+        mkdir -p logs && exec ./build/tm-server \
+          --replica-index=0 \
+          --peers=replica-0:9000,replica-1:9000,replica-2:9000 \
+          --http-peers=http://localhost:8081,http://localhost:8082,http://localhost:8083 \
+          -p 8080 -L logs/tm-0.log
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/dump"]
+      interval: 2s
+      timeout: 1s
+      retries: 5
+      start_period: 5s
+
+  replica-1:
+    image: cs2620:latest
+    pull_policy: never
+    user: "${UID}:${GID}"
+    working_dir: /work/pset4-active
+    volumes:
+      - ./:/work/pset4-active
+    ports:
+      - "8082:8080"
+    command:
+      - bash
+      - -c
+      - |
+        mkdir -p logs && exec ./build/tm-server \
+          --replica-index=1 \
+          --peers=replica-0:9000,replica-1:9000,replica-2:9000 \
+          --http-peers=http://localhost:8081,http://localhost:8082,http://localhost:8083 \
+          -p 8080 -L logs/tm-1.log
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/dump"]
+      interval: 2s
+      timeout: 1s
+      retries: 5
+      start_period: 5s
+
+  replica-2:
+    image: cs2620:latest
+    pull_policy: never
+    user: "${UID}:${GID}"
+    working_dir: /work/pset4-active
+    volumes:
+      - ./:/work/pset4-active
+    ports:
+      - "8083:8080"
+    command:
+      - bash
+      - -c
+      - |
+        mkdir -p logs && exec ./build/tm-server \
+          --replica-index=2 \
+          --peers=replica-0:9000,replica-1:9000,replica-2:9000 \
+          --http-peers=http://localhost:8081,http://localhost:8082,http://localhost:8083 \
+          -p 8080 -L logs/tm-2.log
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/dump"]
+      interval: 2s
+      timeout: 1s
+      retries: 5
+      start_period: 5s

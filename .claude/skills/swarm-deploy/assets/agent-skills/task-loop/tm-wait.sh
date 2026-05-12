@@ -12,7 +12,7 @@ set -u
 : "${TM_URL:?missing}" "${AGENT_ID:?missing}" "${CLAIM_OUT:?missing}"
 
 while true; do
-    RESP=$(curl -fsS -X POST "$TM_URL/task_claim" \
+    RESP=$(curl -fsSL -X POST "$TM_URL/task_claim" \
         -H 'Content-Type: application/json' \
         -d "$(jq -n --arg aid "$AGENT_ID" --argjson s $((RANDOM*RANDOM)) \
               '{agent_id:$aid,serial:$s}')" 2>/dev/null) || { sleep 10; continue; }

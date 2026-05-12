@@ -84,6 +84,12 @@ struct pt_paxos_replica {
     };
     std::unordered_map<size_t, pending_propose*> pending_responses_;
 
+    // Per-apply callback. Fires on EVERY replica inside apply_decided after
+    // process_req succeeds (errcode==ok, path!=/task_list). tm-server uses
+    // this to write the on-disk decision log so all replicas produce
+    // byte-identical logs (real-paxos invariant).
+    tmgr::paxos_replica::on_apply_fn on_apply_;
+
     void try_decide() {
         std::vector<size_t> sorted_acks(follower_ack_slot_);
         std::sort(sorted_acks.begin(), sorted_acks.end());
@@ -109,6 +115,15 @@ struct pt_paxos_replica {
         while (applied_slot_ < decided_slot_ && applied_slot_ < log_base_ + log_.size()) {
             auto& dv = log_[applied_slot_ - log_base_];
             auto resp = db_.process_req(dv.req, dv.now_unix);
+            if (on_apply_) {
+                bool ok = std::visit(
+                    [](auto&& r) { return r.errcode == tmgr::errc::ok; },
+                    resp);
+                auto path = tmgr::request_path(dv.req);
+                if (ok && path != "/task_list") {
+                    on_apply_(dv, path);
+                }
+            }
             if (auto it = pending_responses_.find(applied_slot_);
                 it != pending_responses_.end()) {
                 it->second->resp = std::move(resp);

@@ -21,7 +21,7 @@ export TMPDIR="{TM_WORK}/tmp"
 export SKILL_DIR="$TM_WORK/.claude/skills/task-loop"
 export CLAIM_OUT="$TMPDIR/tm-claim-$AGENT_ID.json"
 mkdir -p "$TMPDIR"
-tm() { curl -fsS -X POST "$TM_URL$1" -H 'Content-Type: application/json' -d "$2"; }
+tm() { curl -fsSL -X POST "$TM_URL$1" -H 'Content-Type: application/json' -d "$2"; }
 # === END PREAMBLE ===
 ```
 
@@ -33,7 +33,7 @@ first):
 
 ```bash
 # === STANDARD PREAMBLE ===
-curl -fsS "$TM_URL/dump" | jq '.tasks | map({id, type:.spec.type, status, owner_agent})'
+curl -fsSL "$TM_URL/dump" | jq '.tasks | map({id, type:.spec.type, status, owner_agent})'
 ```
 
 ## What to do

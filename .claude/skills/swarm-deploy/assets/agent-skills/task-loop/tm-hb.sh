@@ -11,7 +11,7 @@ set -u
 : "${TM_URL:?missing}" "${AGENT_ID:?missing}" "${TASK_ID:?missing}" "${TOK:?missing}"
 
 while true; do
-    curl -fsS -X POST "$TM_URL/task_heartbeat" \
+    curl -fsSL -X POST "$TM_URL/task_heartbeat" \
         -H 'Content-Type: application/json' \
         -d "$(jq -n --arg aid "$AGENT_ID" --argjson s $((RANDOM*RANDOM)) \
               --arg id "$TASK_ID" --argjson tok "$TOK" \

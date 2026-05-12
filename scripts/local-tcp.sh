@@ -2,9 +2,13 @@
 # scripts/local-tcp.sh — local 3-replica TCP test harness for pset4 paxos.
 #
 # All sweep iterations test real tm-server processes communicating over real
-# TCP sockets — the production code path, not the in-process sim. Strict
-# per-task invariant: {id, status, owner_agent, owner_token} must agree
-# across surviving replicas.
+# TCP sockets — the production code path, not the in-process sim. Two
+# invariants checked per iteration:
+#   (1) {id, status, owner_agent, owner_token} agreement across surviving
+#       replicas via /dump (SM-state invariant).
+#   (2) Surviving replicas' decision logs replay to byte-identical
+#       snapshots via tm-replay (real-paxos log-agreement invariant —
+#       catches divergence in the path through paxos even when (1) holds).
 #
 # Subcommands:
 #   start          launch 3 tm-server replicas, leave running for inspection
@@ -71,6 +75,23 @@ check_strict() {
     return 0
 }
 
+# Real-paxos log-replay invariant: all listed replica indices replay to
+# byte-identical snapshots. Catches divergence in the decision log even
+# when /dump agrees (i.e. SM state matches but the path through paxos
+# differed). 0 = agreed.
+check_logs() {
+    local first_idx="$1"
+    local first_snap="/tmp/local-tcp-snap-${first_idx}.json"
+    ./build/tm-replay -L "logs/tm-${first_idx}.log" -o "$first_snap" >/dev/null 2>&1 || return 1
+    shift
+    for idx in "$@"; do
+        local snap="/tmp/local-tcp-snap-${idx}.json"
+        ./build/tm-replay -L "logs/tm-${idx}.log" -o "$snap" >/dev/null 2>&1 || return 1
+        diff -q "$first_snap" "$snap" >/dev/null 2>&1 || return 1
+    done
+    return 0
+}
+
 # === Scenario: baseline ===
 # No failure injection. Two smoke runs back-to-back, then strict invariant on
 # all 3 replicas. Catches flakes that happen without any injection.
@@ -80,6 +101,7 @@ iter_baseline() {
     run_smoke http://localhost:8080 || { stop_replicas; return 1; }
     sleep 1
     check_strict 8080 8081 8082 || { stop_replicas; return 1; }
+    check_logs 0 1 2 || { stop_replicas; return 1; }
     stop_replicas
     return 0
 }
@@ -95,6 +117,10 @@ iter_kill_leader() {
     run_smoke http://localhost:8081 || { stop_replicas; return 1; }
     sleep 1  # let final decided_slot propagate via 100ms retransmit
     check_strict 8081 8082 || { stop_replicas; return 1; }
+    # Only survivors' logs are expected to agree — replica 0 is dead and its
+    # log is frozen at whatever it wrote before SIGKILL (hard-rule #5: no
+    # state transfer).
+    check_logs 1 2 || { stop_replicas; return 1; }
     stop_replicas
     return 0
 }
@@ -117,6 +143,7 @@ iter_pause_resume() {
     kill -CONT "$pid" 2>/dev/null
     sleep 3  # catch-up
     check_strict 8080 8081 8082 || { stop_replicas; return 1; }
+    check_logs 0 1 2 || { stop_replicas; return 1; }
     stop_replicas
     return 0
 }

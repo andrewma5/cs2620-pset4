@@ -1,12 +1,19 @@
-# pset4 — Distributed Task Manager (POC, single-instance)
+# pset4 — Distributed Task Manager
 
-This is the **POC step** of pset4: a single-instance task manager that
-hands work to a swarm of Claude CLI agents over plain HTTP/JSON. The
-state machine is shaped so Multi-Paxos drops on top later (see
-`PLAN.md` and `docs/PLAN.md`); **the next person on this codebase is
-paxos-ifying it and replicating it.** Everything below describes the
-state of the world right now (POC) and the moving pieces that will be
-preserved across that transition.
+A 3-replica Multi-Paxos task manager that hands work to a swarm of
+Claude CLI agents over HTTP/JSON.
+
+> **New contributor?** Read [`docs/PARTNER_ONBOARDING.md`](docs/PARTNER_ONBOARDING.md) first.
+> It covers what changed since the single-instance POC, the three-layer
+> test stack (sim / local-TCP / docker), how to build and run the demo,
+> the hard-rules, and known limitations.
+
+This file describes the POC layer of the codebase (the state machine,
+the lifecycle, the lease + fencing story) — all of which is unchanged
+by paxos and still accurate. The replicated layer (paxos engine,
+transport split, multi-replica deployment, failure injection, replay
+invariant) is documented in `docs/PARTNER_ONBOARDING.md` and
+`docs/PLAN.md`.
 
 ---
 
@@ -69,7 +76,7 @@ including the demo. See "Deploying a swarm" below for the workflow.
 
 ### Docs
 
-- `PLAN.md` — the **full replicated target** (what the next person is
+- `docs/PLAN.md` — the **full replicated target** (what the next person is
   building toward). Covers data model, RPC surface, leases, fencing,
   failure handling, the two-tier test plan.
 - `docs/PLAN.md` — older copy of the same plan kept for reference.
@@ -312,7 +319,7 @@ Python owns ergonomics.
    skills agree to only push under it.
 ```
 
-The HTTP surface (full list and semantics in `PLAN.md` §5):
+The HTTP surface (full list and semantics in `docs/PLAN.md` §5):
 `task_create`, `task_list`, `task_claim`, `task_heartbeat`,
 `task_complete`, `task_fail`, `swarm_resume`, `main_lock_acquire`,
 `main_lock_release`, plus `GET /dump` for debugging.
@@ -335,13 +342,18 @@ mismatch ⇒ `{fenced: true}` and the agent drops the work and loops.
 
 ---
 
-## Known limitations of the POC
+## Known limitations
 
-- **No replication.** This is the POC step; Multi-Paxos drops in next.
-- **No persistence.** Killing `tm-server` loses all state. The decision
-  log is for replay/visualization, not recovery.
+- **No state transfer.** `kill`'d replicas stay dead — the survivors
+  keep going (`docker compose pause` / `partition` are the recovery
+  paths). See `docs/PARTNER_ONBOARDING.md` and hard-rule #5 in
+  `docs/PLAN.md`.
+- **No persistence past full-cluster crash.** Each replica's decision
+  log + SM state is in-process; killing all 3 replicas loses state.
+  The decision log is for replay/visualization, not crash recovery.
 - **No HTTP-layer retransmit dedup.** Idempotency rests on the fencing
-  token. The replicated step adds `(agent_id, serial)` dedup.
+  token. `(agent_id, serial)` dedup at the HTTP layer is deferred
+  (see `docs/PLAN.md` §2.5).
 - **No `tm-cli`.** Humans use `curl` directly (or `make status`).
 - **Worktree leaks.** Agent crashes can leave worktrees behind; clean
   with `git worktree prune` between runs.
@@ -353,34 +365,12 @@ mismatch ⇒ `{fenced: true}` and the agent drops the work and loops.
 
 ---
 
-## Handoff notes for the next person (paxos-ification)
+## Where the paxos layer lives
 
-The whole codebase is shaped so the next step is mechanical:
-
-1. **`task_manager_db` is already a typed SM with a single
-   `process_req(req, now_unix) → resp`.** That's the same shape pset3
-   Paxos replicates. Templatize `pt_paxos_replica` over `(request,
-   response, SM)` and plug `tm::task_manager_db` in. Paxos protocol
-   code does not need to understand task semantics — it treats
-   requests as opaque blobs (pset3 writeup §"opaque blobs").
-2. **`tm-server.cc`'s dispatch is the only place that calls
-   `db.process_req()` directly.** Replace that one call with a Paxos
-   propose-and-wait. Everything else (HTTP parsing, JSON
-   serialization, decision log) is untouched.
-3. **`now_unix` is already an explicit input to the SM.** The leader
-   stamps it when proposing; replicas replay the same value. Standard
-   SMR-with-real-time trick — no new design work needed.
-4. **Tier-1 tests** (synthetic agents on `sim_transport`, 1000+ seeds,
-   failure schedules `fail_leader_permanent`, `fail_leader_temporary`,
-   `fail_split_brain`, `kill_agent`, `stall_agent`,
-   `agent_during_leader_change`) live in Phase B per `PLAN.md` §12.
-   They were intentionally not built for the POC because there is
-   nothing nondeterministic with one replica beyond what unit tests
-   cover.
-5. **Tier-2 demo** swaps the localhost `tm-server` for a
-   docker-compose with three replicas. Same skills, same agent loop,
-   same `swarm-deploy` workflow — only `TM_URL` in each agent's
-   `CLAUDE.md` changes.
-
-`PLAN.md` has the full target architecture, RPC table, failure model,
-and build order. Read that first before touching the SM.
+The replicated state machine, transport split, multi-replica
+deployment, failure-injection commands, automated test sweeps, and
+the on-apply log-agreement invariant are all documented in
+[`docs/PARTNER_ONBOARDING.md`](docs/PARTNER_ONBOARDING.md). Read that
+for the current architecture and how to build / test / run the demo.
+[`docs/PLAN.md`](docs/PLAN.md) has the original target spec, RPC
+table, full failure model, and build order.

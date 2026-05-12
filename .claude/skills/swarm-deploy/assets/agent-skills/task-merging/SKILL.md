@@ -27,7 +27,7 @@ export TASK_ID="..."         # from dispatch prompt
 export TOK=...               # from dispatch prompt
 export SPEC_JSON='...'       # from dispatch prompt (single-quoted)
 mkdir -p "$TMPDIR"
-tm() { curl -fsS -X POST "$TM_URL$1" -H 'Content-Type: application/json' -d "$2"; }
+tm() { curl -fsSL -X POST "$TM_URL$1" -H 'Content-Type: application/json' -d "$2"; }
 # === END PREAMBLE ===
 ```
 

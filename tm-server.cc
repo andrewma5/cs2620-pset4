@@ -40,13 +40,18 @@ int64_t decision_seq = 0;
 // clients can find the actual leader.
 std::vector<std::string> http_peers;
 
-void log_decision(std::string_view path, int64_t now, const tmgr::request& req) {
+// Append one JSONL entry to the decision log. Called from the paxos
+// apply_decided callback on EVERY replica (so all replicas produce
+// byte-identical logs — real-paxos invariant; see Phase 4.6 in docs/PLAN.md).
+// The filter (errcode==ok && path != /task_list) is applied inside
+// apply_decided, so this is unconditionally a write.
+void log_decided(const tmgr::decided_value& dv, std::string_view path) {
     if (!decision_log) return;
     json entry = {
         {"seq", ++decision_seq},
-        {"now_unix", now},
+        {"now_unix", dv.now_unix},
         {"path", path},
-        {"request", tmgr::to_json_request_body(req)}
+        {"request", tmgr::to_json_request_body(dv.req)}
     };
     auto s = entry.dump();
     s.push_back('\n');
@@ -116,11 +121,11 @@ cot::task<cot::http_message> handle(cot::http_message req, tmgr::paxos_replica& 
     }
 
     // Phase 2.3c: propose_and_apply is async. It blocks until paxos decides
-    // and applies the slot carrying this request, then returns the response
-    // and the leader-stamped now_unix (replayed through the decision log).
+    // and applies the slot carrying this request, then returns the response.
+    // (The leader-stamped now_unix is captured inside the decided_value and
+    // logged by paxos.apply_decided() via the decision_logger callback.)
     auto result = co_await paxos.propose_and_apply(tmreq);
     tmgr::response& tmresp = result.resp;
-    int64_t now = result.now_unix;
 
     // Phase 2.6: if we're not the leader and we know the leader's HTTP URL,
     // redirect the client instead of returning the not-leader error.
@@ -132,12 +137,10 @@ cot::task<cot::http_message> handle(cot::http_message req, tmgr::paxos_replica& 
         }
     }
 
-    // Log the decided request iff (a) it actually mutated the SM (errcode==ok)
-    // and (b) it is not a read-only path. task_list is read-only; everything
-    // else mutates state on success.
-    if (base_of(tmresp).errcode == tmgr::errc::ok && path != "/task_list") {
-        log_decision(path, now, tmreq);
-    }
+    // Logging is now driven from paxos.apply_decided() via the
+    // decision_logger callback registered in main(). Every replica logs
+    // when it applies; the filter (errcode==ok && path != /task_list)
+    // is enforced inside apply_decided.
 
     co_return make_response(200, tmgr::to_json_response(tmresp));
 }
@@ -294,6 +297,10 @@ int main(int argc, char* argv[]) {
                               "(replica {} of {}, peers={})\n",
                    replica_index, peers.size(), peers[replica_index]);
     }
+
+    // Register per-apply log callback. Fires on every replica when it
+    // applies a decided value (real-paxos invariant — see docs/docs/PLAN.md §4.6).
+    paxos->set_decision_logger(log_decided);
 
     cot::task<> t = serve(std::format("0.0.0.0:{}", port), *paxos);
     cot::loop();

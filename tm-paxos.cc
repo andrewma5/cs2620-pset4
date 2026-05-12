@@ -304,3 +304,7 @@ const tmgr::task_manager_db& tmgr::paxos_replica::db() const {
 size_t tmgr::paxos_replica::leader_index() const {
     return p_->inner_->leader_index_;
 }
+
+void tmgr::paxos_replica::set_decision_logger(on_apply_fn cb) {
+    p_->inner_->on_apply_ = std::move(cb);
+}

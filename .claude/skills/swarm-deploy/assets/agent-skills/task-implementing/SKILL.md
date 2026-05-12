@@ -26,7 +26,7 @@ export TASK_ID="..."         # from dispatch prompt
 export TOK=...               # from dispatch prompt
 export SPEC_JSON='...'       # from dispatch prompt (single-quoted)
 mkdir -p "$TMPDIR"
-tm() { curl -fsS -X POST "$TM_URL$1" -H 'Content-Type: application/json' -d "$2"; }
+tm() { curl -fsSL -X POST "$TM_URL$1" -H 'Content-Type: application/json' -d "$2"; }
 # === END PREAMBLE ===
 ```
 
@@ -123,7 +123,7 @@ would unblock the goal, hand it off via `task_complete`'s
 
    ```bash
    for DEP in $REQS; do
-       DEP_INFO=$(curl -fsS "$TM_URL/dump" | jq --arg d "$DEP" '.tasks[]|select(.id==$d)')
+       DEP_INFO=$(curl -fsSL "$TM_URL/dump" | jq --arg d "$DEP" '.tasks[]|select(.id==$d)')
        DEP_BRANCH=$(echo "$DEP_INFO" | jq -r .result_branch)
        if [ -n "$DEP_BRANCH" ] && [ "$DEP_BRANCH" != "null" ] && [ "$DEP_BRANCH" != "" ]; then
            echo "[implementing] merging predecessor $DEP @ $DEP_BRANCH"

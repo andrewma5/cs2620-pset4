@@ -16,8 +16,10 @@
 #include "tm.hh"
 #include "cotamer/cotamer.hh"
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace tmgr {
@@ -66,6 +68,15 @@ public:
     // Which replica this server thinks is currently the leader. Used by
     // tm-server to 307-redirect non-leader HTTP requests.
     size_t leader_index() const;
+
+    // Per-apply callback. Fires on EVERY replica (not just leader) inside
+    // apply_decided, once the SM has processed the decided value AND the
+    // response was errcode::ok AND path != "/task_list". This is where
+    // tm-server writes the on-disk decision log so all replicas produce
+    // byte-identical logs (real-paxos invariant; powers tm-replay).
+    using on_apply_fn =
+        std::function<void(const decided_value& dv, std::string_view path)>;
+    void set_decision_logger(on_apply_fn cb);
 
 private:
     struct impl;

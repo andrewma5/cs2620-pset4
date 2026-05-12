@@ -33,7 +33,7 @@ export TMPDIR="$TM_WORK/tmp"
 export SKILL_DIR="$TM_WORK/.claude/skills/task-loop"
 export CLAIM_OUT="$TMPDIR/tm-claim-$AGENT_ID.json"
 mkdir -p "$TMPDIR"
-tm() { curl -fsS -X POST "$TM_URL$1" -H 'Content-Type: application/json' -d "$2"; }
+tm() { curl -fsSL -X POST "$TM_URL$1" -H 'Content-Type: application/json' -d "$2"; }
 # === END PREAMBLE ===
 ```
 
@@ -201,7 +201,7 @@ exports (env does NOT propagate between Bash tool calls):
   export TASK_ID="<TASK_ID>"
   export TOK=<TOK>
   export SPEC_JSON='<SPEC_JSON>'
-  tm() { curl -fsS -X POST "$TM_URL$1" -H 'Content-Type: application/json' -d "$2"; }
+  tm() { curl -fsSL -X POST "$TM_URL$1" -H 'Content-Type: application/json' -d "$2"; }
 
 The PARENT agent owns ALL background tm-* scripts (heartbeat, wait, any
 other long-running poll). A separate background shell is already pinging
