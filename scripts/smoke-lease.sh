@@ -19,8 +19,8 @@ echo "==> agent-b tries to claim immediately: expect none"
 RES=$(post /task_claim '{"agent_id":"agent-b","serial":102}')
 test "$(echo "$RES" | jq -r .none)" = "true"
 
-echo "==> sleep 16s to let agent-a's lease expire"
-sleep 16
+echo "==> sleep 50s to let agent-a's lease expire"
+sleep 50
 
 echo "==> agent-b tries again: should now take over"
 RES=$(post /task_claim '{"agent_id":"agent-b","serial":103}')

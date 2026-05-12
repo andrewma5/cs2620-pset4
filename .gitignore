@@ -1,0 +1,10 @@
+# Build output
+build/
+
+# Runtime logs (decision logs + stderr from local 3-replica test scripts)
+logs/
+
+# Stray log files at root (older script versions wrote here; tolerated)
+tm-server.log
+tm-*.log
+tm-*.stderr

@@ -71,6 +71,11 @@ add_library(CotamerHttp OBJECT
 )
 target_include_directories(CotamerHttp PUBLIC ${LLHTTP_INCLUDE_DIR})
 
+# Small utility helpers (ported from pset3; used by tm-paxos and tier-1 tests).
+add_library(Utils OBJECT
+    utils.cc
+)
+
 # tm SM library (created in later tasks; tm.cc and task_manager_db.cc
 # don't exist yet, but listing them here lets us add them as we go)
 add_library(Tm OBJECT
@@ -78,11 +83,20 @@ add_library(Tm OBJECT
     task_manager_db.cc
 )
 
+# Multi-Paxos replication engine (ported from pset3 pt-paxos.cc) plus the
+# real-TCP transport for multi-process demos (Phase 2.3b / Phase 4).
+add_library(TmPaxos OBJECT
+    tm-paxos.cc
+    tcp_transport.cc
+)
+
 add_executable(tm-server
     tm-server.cc
     $<TARGET_OBJECTS:Cotamer>
     $<TARGET_OBJECTS:CotamerHttp>
     $<TARGET_OBJECTS:Tm>
+    $<TARGET_OBJECTS:TmPaxos>
+    $<TARGET_OBJECTS:Utils>
 )
 target_include_directories(tm-server PRIVATE ${LLHTTP_INCLUDE_DIR})
 target_link_libraries(tm-server PRIVATE
@@ -96,6 +110,18 @@ add_executable(tm-tests
     $<TARGET_OBJECTS:Tm>
 )
 target_link_libraries(tm-tests PRIVATE
+    nlohmann_json::nlohmann_json
+)
+
+# Tier-1 sim tests: multi-replica paxos via netsim+sim_transport.
+add_executable(tm-paxos-tests
+    tm-paxos-tests.cc
+    $<TARGET_OBJECTS:Cotamer>
+    $<TARGET_OBJECTS:Tm>
+    $<TARGET_OBJECTS:TmPaxos>
+    $<TARGET_OBJECTS:Utils>
+)
+target_link_libraries(tm-paxos-tests PRIVATE
     nlohmann_json::nlohmann_json
 )
 

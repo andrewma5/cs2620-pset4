@@ -6,7 +6,9 @@ set -euo pipefail
 TM_URL="${TM_URL:-http://localhost:8080}"
 
 post() {
-    curl -fsS -X POST "$TM_URL$1" -H 'Content-Type: application/json' -d "$2"
+    # -L follows 307 redirects (multi-replica leader-redirect, Phase 2.6).
+    # Harmless for single-replica.
+    curl -fsSL -X POST "$TM_URL$1" -H 'Content-Type: application/json' -d "$2"
 }
 
 echo "==> creating plan task"

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la /Users/annieliupoo/Documents/harvard/code/cs2620-s26-psets-aliu104/cotamer/ | head -20)",
+      "Read(//Users/annieliupoo/Documents/harvard/code/cs2620-s26-psets-aliu104/cotamer/**)",
+      "Bash(find /Users/annieliupoo/Documents/harvard/code/cs2620-s26-psets-aliu104 /Users/annieliupoo/Documents/harvard/code/cs2620-pset4 -maxdepth 2 -name \"CLAUDE.md\" 2>/dev/null)",
+      "Read(//Users/annieliupoo/Documents/harvard/code/cs2620-s26-psets-aliu104/**)",
+      "Bash(find /Users/annieliupoo/Documents/harvard/code/cs2620-pset4/.. -maxdepth 3 -name \"http*\" -type f 2>/dev/null | head -10)",
+      "Read(//Users/annieliupoo/Documents/harvard/code/**)"
+    ]
+  }
+}
