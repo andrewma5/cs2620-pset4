@@ -70,12 +70,16 @@ public:
     size_t leader_index() const;
 
     // Per-apply callback. Fires on EVERY replica (not just leader) inside
-    // apply_decided, once the SM has processed the decided value AND the
-    // response was errcode::ok AND path != "/task_list". This is where
+    // apply_decided after the SM processes the decided value, for every
+    // mutation (path != "/task_list" — those are reads). Both ok and
+    // rejected (e.g. fenced) responses are reported; `errcode` carries the
+    // outcome so the on-disk decision log can record it. This is where
     // tm-server writes the on-disk decision log so all replicas produce
     // byte-identical logs (real-paxos invariant; powers tm-replay).
     using on_apply_fn =
-        std::function<void(const decided_value& dv, std::string_view path)>;
+        std::function<void(const decided_value& dv,
+                           std::string_view path,
+                           errc errcode)>;
     void set_decision_logger(on_apply_fn cb);
 
 private:

@@ -43,14 +43,23 @@ std::vector<std::string> http_peers;
 // Append one JSONL entry to the decision log. Called from the paxos
 // apply_decided callback on EVERY replica (so all replicas produce
 // byte-identical logs — real-paxos invariant; see Phase 4.6 in docs/PLAN.md).
-// The filter (errcode==ok && path != /task_list) is applied inside
-// apply_decided, so this is unconditionally a write.
-void log_decided(const tmgr::decided_value& dv, std::string_view path) {
+// The filter (path != /task_list) is applied inside apply_decided, so this
+// is unconditionally a write. Rejected requests (e.g. fenced heartbeats)
+// are logged too — `errcode` records the SM's verdict so audits and the
+// visualizer can show fencing rejections, dedup-collisions, etc.
+void log_decided(const tmgr::decided_value& dv, std::string_view path,
+                 tmgr::errc errcode) {
     if (!decision_log) return;
+    // applied_at_unix is stamped locally on every replica as it applies. A
+    // partitioned replica will eventually apply the same seq but with a
+    // later applied_at_unix than the leader's now_unix — that gap is how
+    // the visualizer exposes partition lag.
     json entry = {
         {"seq", ++decision_seq},
         {"now_unix", dv.now_unix},
+        {"applied_at_unix", std::time(nullptr)},
         {"path", path},
+        {"errcode", errcode},
         {"request", tmgr::to_json_request_body(dv.req)}
     };
     auto s = entry.dump();
@@ -139,8 +148,9 @@ cot::task<cot::http_message> handle(cot::http_message req, tmgr::paxos_replica& 
 
     // Logging is now driven from paxos.apply_decided() via the
     // decision_logger callback registered in main(). Every replica logs
-    // when it applies; the filter (errcode==ok && path != /task_list)
-    // is enforced inside apply_decided.
+    // when it applies; the filter (path != /task_list) is enforced inside
+    // apply_decided. Rejected mutations (e.g. fenced heartbeats) are still
+    // logged with their errcode.
 
     co_return make_response(200, tmgr::to_json_response(tmresp));
 }
