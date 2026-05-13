@@ -34,6 +34,7 @@ bool verbose = false;
 // Single-threaded event loop, so plain int64_t is fine.
 std::FILE* decision_log = nullptr;
 int64_t decision_seq = 0;
+int decision_log_replica_index = -1;
 
 // HTTP URLs of all replicas in index order. Empty in single-replica mode.
 // When non-empty, handle() returns 307 redirects on busy (non-leader) so
@@ -47,9 +48,15 @@ std::vector<std::string> http_peers;
 // apply_decided, so this is unconditionally a write.
 void log_decided(const tmgr::decided_value& dv, std::string_view path) {
     if (!decision_log) return;
+    // apply_at_local is this replica's wall-clock at the apply moment — it
+    // diverges across replicas during outages, unlike dv.now_unix (which is
+    // leader-stamped and therefore identical across all replicas, preserving
+    // the wall-clock determinism invariant).
     json entry = {
         {"seq", ++decision_seq},
         {"now_unix", dv.now_unix},
+        {"apply_at_local", static_cast<int64_t>(std::time(nullptr))},
+        {"replica_index", decision_log_replica_index},
         {"path", path},
         {"request", tmgr::to_json_request_body(dv.req)}
     };
@@ -273,6 +280,7 @@ int main(int argc, char* argv[]) {
                        log_path, std::strerror(errno));
             return 1;
         }
+        decision_log_replica_index = static_cast<int>(replica_index);
         std::print(std::cerr, "tm-server: decision log -> {} ({})\n",
                    log_path, append_log ? "append" : "truncate");
     } else {

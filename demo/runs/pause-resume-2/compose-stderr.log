@@ -1,0 +1,14 @@
+replica-0-1  | tm-server: decision log -> logs/tm-0.log (truncate)
+replica-0-1  | tm-server: paxos = multi-replica TCP (replica 0 of 3, peers=replica-0:9000)
+replica-1-1  | tm-server: decision log -> logs/tm-1.log (truncate)
+replica-1-1  | tm-server: paxos = multi-replica TCP (replica 1 of 3, peers=replica-1:9000)
+replica-1-1  | tm-server listening on 0.0.0.0:8080
+replica-1-1  | === become_leader: replica 1 round 4 ===
+replica-1-1  |   best: sender=0 ack_round=0 slot=28 len=24 ack_slot=52
+replica-1-1  |   resp: sender=1 ack_round=0 slot=28 len=0 ack_slot=28 decided=28
+replica-1-1  |   resp: sender=0 ack_round=0 slot=28 len=24 ack_slot=52 decided=52
+replica-1-1  |   our decided_slot_=28 applied_slot_=28
+replica-2-1  | tm-server: decision log -> logs/tm-2.log (truncate)
+replica-2-1  | tm-server: paxos = multi-replica TCP (replica 2 of 3, peers=replica-2:9000)
+replica-0-1  | tm-server listening on 0.0.0.0:8080
+replica-2-1  | tm-server listening on 0.0.0.0:8080

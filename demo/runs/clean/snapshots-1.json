@@ -1,0 +1,1686 @@
+[
+  {
+    "affected_task_id": "",
+    "now_unix": 0,
+    "op": "",
+    "op_summary": "(initial state)",
+    "seq": 0,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": []
+    }
+  },
+  {
+    "affected_task_id": "t/0001",
+    "now_unix": 1778685170,
+    "op": "/task_create",
+    "op_summary": "task_create t/0001 (plan) \"Build a CLI calculator\"",
+    "seq": 1,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 0,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0001",
+    "now_unix": 1778685300,
+    "op": "/task_claim",
+    "op_summary": "task_claim agent-1 -> t/0001 (token 1)",
+    "seq": 2,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685300,
+          "id": "t/0001",
+          "owner_agent": "agent-1",
+          "owner_token": 1,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0001",
+    "now_unix": 1778685335,
+    "op": "/task_complete",
+    "op_summary": "task_complete t/0001 (agent-1) + 2 child(ren)",
+    "seq": 11,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685333,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: calc/ops.py and calc/repl.py",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 0,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, subtract, multiply, divide as pure functions in calc/ops.py. Also create tests/test_ops.py with unit tests for each function including edge cases (divide by zero should raise ValueError). branch_base is main.",
+            "requires": [],
+            "title": "calc ops module",
+            "type": "implement"
+          },
+          "status": "pending"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 0,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads input lines like '1 + 2' and prints results. Use calc.ops for arithmetic. Also create tests/test_repl.py with at least one happy-path test. The module must be runnable as `python -m calc.repl`. branch_base is main.",
+            "requires": [],
+            "title": "calc REPL",
+            "type": "implement"
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0002",
+    "now_unix": 1778685343,
+    "op": "/task_claim",
+    "op_summary": "task_claim agent-2 -> t/0002 (token 2)",
+    "seq": 12,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685333,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: calc/ops.py and calc/repl.py",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685343,
+          "id": "t/0002",
+          "owner_agent": "agent-2",
+          "owner_token": 2,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, subtract, multiply, divide as pure functions in calc/ops.py. Also create tests/test_ops.py with unit tests for each function including edge cases (divide by zero should raise ValueError). branch_base is main.",
+            "requires": [],
+            "title": "calc ops module",
+            "type": "implement"
+          },
+          "status": "in_progress"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 0,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads input lines like '1 + 2' and prints results. Use calc.ops for arithmetic. Also create tests/test_repl.py with at least one happy-path test. The module must be runnable as `python -m calc.repl`. branch_base is main.",
+            "requires": [],
+            "title": "calc REPL",
+            "type": "implement"
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0003",
+    "now_unix": 1778685348,
+    "op": "/task_claim",
+    "op_summary": "task_claim agent-3 -> t/0003 (token 3)",
+    "seq": 13,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685333,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: calc/ops.py and calc/repl.py",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685343,
+          "id": "t/0002",
+          "owner_agent": "agent-2",
+          "owner_token": 2,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, subtract, multiply, divide as pure functions in calc/ops.py. Also create tests/test_ops.py with unit tests for each function including edge cases (divide by zero should raise ValueError). branch_base is main.",
+            "requires": [],
+            "title": "calc ops module",
+            "type": "implement"
+          },
+          "status": "in_progress"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685348,
+          "id": "t/0003",
+          "owner_agent": "agent-3",
+          "owner_token": 3,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads input lines like '1 + 2' and prints results. Use calc.ops for arithmetic. Also create tests/test_repl.py with at least one happy-path test. The module must be runnable as `python -m calc.repl`. branch_base is main.",
+            "requires": [],
+            "title": "calc REPL",
+            "type": "implement"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0002",
+    "now_unix": 1778685423,
+    "op": "/task_complete",
+    "op_summary": "task_complete t/0002 (agent-2) + merge t/0004",
+    "seq": 37,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685333,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: calc/ops.py and calc/repl.py",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685422,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+          "result_summary": "Shipped calc ops module on branch task/t/0002 @ 09ab804ad5d37616dc80fc2e529affa16a6ad62b.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, subtract, multiply, divide as pure functions in calc/ops.py. Also create tests/test_ops.py with unit tests for each function including edge cases (divide by zero should raise ValueError). branch_base is main.",
+            "requires": [],
+            "title": "calc ops module",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685412,
+          "id": "t/0003",
+          "owner_agent": "agent-3",
+          "owner_token": 3,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads input lines like '1 + 2' and prints results. Use calc.ops for arithmetic. Also create tests/test_repl.py with at least one happy-path test. The module must be runnable as `python -m calc.repl`. branch_base is main.",
+            "requires": [],
+            "title": "calc REPL",
+            "type": "implement"
+          },
+          "status": "in_progress"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 0,
+          "id": "t/0004",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0004",
+    "now_unix": 1778685424,
+    "op": "/task_claim",
+    "op_summary": "task_claim agent-1 -> t/0004 (token 4)",
+    "seq": 39,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685333,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: calc/ops.py and calc/repl.py",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685422,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+          "result_summary": "Shipped calc ops module on branch task/t/0002 @ 09ab804ad5d37616dc80fc2e529affa16a6ad62b.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, subtract, multiply, divide as pure functions in calc/ops.py. Also create tests/test_ops.py with unit tests for each function including edge cases (divide by zero should raise ValueError). branch_base is main.",
+            "requires": [],
+            "title": "calc ops module",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685423,
+          "id": "t/0003",
+          "owner_agent": "agent-3",
+          "owner_token": 3,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads input lines like '1 + 2' and prints results. Use calc.ops for arithmetic. Also create tests/test_repl.py with at least one happy-path test. The module must be runnable as `python -m calc.repl`. branch_base is main.",
+            "requires": [],
+            "title": "calc REPL",
+            "type": "implement"
+          },
+          "status": "in_progress"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685424,
+          "id": "t/0004",
+          "owner_agent": "agent-1",
+          "owner_token": 4,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0003",
+    "now_unix": 1778685439,
+    "op": "/task_complete",
+    "op_summary": "task_complete t/0003 (agent-3) + merge t/0005",
+    "seq": 43,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685333,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: calc/ops.py and calc/repl.py",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685422,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+          "result_summary": "Shipped calc ops module on branch task/t/0002 @ 09ab804ad5d37616dc80fc2e529affa16a6ad62b.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, subtract, multiply, divide as pure functions in calc/ops.py. Also create tests/test_ops.py with unit tests for each function including edge cases (divide by zero should raise ValueError). branch_base is main.",
+            "requires": [],
+            "title": "calc ops module",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685433,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+          "result_summary": "Shipped calc REPL on branch task/t/0003 @ c86af02540ff6d0288914f64baa67d8f3b019d33.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads input lines like '1 + 2' and prints results. Use calc.ops for arithmetic. Also create tests/test_repl.py with at least one happy-path test. The module must be runnable as `python -m calc.repl`. branch_base is main.",
+            "requires": [],
+            "title": "calc REPL",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685433,
+          "id": "t/0004",
+          "owner_agent": "agent-1",
+          "owner_token": 4,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 0,
+          "id": "t/0005",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0005",
+    "now_unix": 1778685440,
+    "op": "/task_claim",
+    "op_summary": "task_claim agent-2 -> t/0005 (token 5)",
+    "seq": 44,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685333,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: calc/ops.py and calc/repl.py",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685422,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+          "result_summary": "Shipped calc ops module on branch task/t/0002 @ 09ab804ad5d37616dc80fc2e529affa16a6ad62b.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, subtract, multiply, divide as pure functions in calc/ops.py. Also create tests/test_ops.py with unit tests for each function including edge cases (divide by zero should raise ValueError). branch_base is main.",
+            "requires": [],
+            "title": "calc ops module",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685433,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+          "result_summary": "Shipped calc REPL on branch task/t/0003 @ c86af02540ff6d0288914f64baa67d8f3b019d33.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads input lines like '1 + 2' and prints results. Use calc.ops for arithmetic. Also create tests/test_repl.py with at least one happy-path test. The module must be runnable as `python -m calc.repl`. branch_base is main.",
+            "requires": [],
+            "title": "calc REPL",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685433,
+          "id": "t/0004",
+          "owner_agent": "agent-1",
+          "owner_token": 4,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685440,
+          "id": "t/0005",
+          "owner_agent": "agent-2",
+          "owner_token": 5,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0004",
+    "now_unix": 1778685464,
+    "op": "/main_lock_acquire",
+    "op_summary": "main_lock_acquire agent-1 (token 6)",
+    "seq": 52,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "agent-1",
+        "holder_merge_task": "t/0004",
+        "lock_token": 6
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685333,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: calc/ops.py and calc/repl.py",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685422,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+          "result_summary": "Shipped calc ops module on branch task/t/0002 @ 09ab804ad5d37616dc80fc2e529affa16a6ad62b.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, subtract, multiply, divide as pure functions in calc/ops.py. Also create tests/test_ops.py with unit tests for each function including edge cases (divide by zero should raise ValueError). branch_base is main.",
+            "requires": [],
+            "title": "calc ops module",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685433,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+          "result_summary": "Shipped calc REPL on branch task/t/0003 @ c86af02540ff6d0288914f64baa67d8f3b019d33.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads input lines like '1 + 2' and prints results. Use calc.ops for arithmetic. Also create tests/test_repl.py with at least one happy-path test. The module must be runnable as `python -m calc.repl`. branch_base is main.",
+            "requires": [],
+            "title": "calc REPL",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685463,
+          "id": "t/0004",
+          "owner_agent": "agent-1",
+          "owner_token": 4,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685460,
+          "id": "t/0005",
+          "owner_agent": "agent-2",
+          "owner_token": 5,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "",
+    "now_unix": 1778685471,
+    "op": "/main_lock_release",
+    "op_summary": "main_lock_release (agent-1)",
+    "seq": 55,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685333,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: calc/ops.py and calc/repl.py",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685422,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+          "result_summary": "Shipped calc ops module on branch task/t/0002 @ 09ab804ad5d37616dc80fc2e529affa16a6ad62b.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, subtract, multiply, divide as pure functions in calc/ops.py. Also create tests/test_ops.py with unit tests for each function including edge cases (divide by zero should raise ValueError). branch_base is main.",
+            "requires": [],
+            "title": "calc ops module",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685433,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+          "result_summary": "Shipped calc REPL on branch task/t/0003 @ c86af02540ff6d0288914f64baa67d8f3b019d33.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads input lines like '1 + 2' and prints results. Use calc.ops for arithmetic. Also create tests/test_repl.py with at least one happy-path test. The module must be runnable as `python -m calc.repl`. branch_base is main.",
+            "requires": [],
+            "title": "calc REPL",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685463,
+          "id": "t/0004",
+          "owner_agent": "agent-1",
+          "owner_token": 4,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685471,
+          "id": "t/0005",
+          "owner_agent": "agent-2",
+          "owner_token": 5,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0004",
+    "now_unix": 1778685471,
+    "op": "/task_complete",
+    "op_summary": "task_complete t/0004 (agent-1)",
+    "seq": 56,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685333,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: calc/ops.py and calc/repl.py",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685422,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+          "result_summary": "Shipped calc ops module on branch task/t/0002 @ 09ab804ad5d37616dc80fc2e529affa16a6ad62b.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, subtract, multiply, divide as pure functions in calc/ops.py. Also create tests/test_ops.py with unit tests for each function including edge cases (divide by zero should raise ValueError). branch_base is main.",
+            "requires": [],
+            "title": "calc ops module",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685433,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+          "result_summary": "Shipped calc REPL on branch task/t/0003 @ c86af02540ff6d0288914f64baa67d8f3b019d33.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads input lines like '1 + 2' and prints results. Use calc.ops for arithmetic. Also create tests/test_repl.py with at least one happy-path test. The module must be runnable as `python -m calc.repl`. branch_base is main.",
+            "requires": [],
+            "title": "calc REPL",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685463,
+          "id": "t/0004",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+          "result_summary": "Merged 09ab804ad5d37616dc80fc2e529affa16a6ad62b into main; new HEAD 09ab804ad5d37616dc80fc2e529affa16a6ad62b.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685471,
+          "id": "t/0005",
+          "owner_agent": "agent-2",
+          "owner_token": 5,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0005",
+    "now_unix": 1778685485,
+    "op": "/main_lock_acquire",
+    "op_summary": "main_lock_acquire agent-2 (token 7)",
+    "seq": 60,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "agent-2",
+        "holder_merge_task": "t/0005",
+        "lock_token": 7
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685333,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: calc/ops.py and calc/repl.py",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685422,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+          "result_summary": "Shipped calc ops module on branch task/t/0002 @ 09ab804ad5d37616dc80fc2e529affa16a6ad62b.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, subtract, multiply, divide as pure functions in calc/ops.py. Also create tests/test_ops.py with unit tests for each function including edge cases (divide by zero should raise ValueError). branch_base is main.",
+            "requires": [],
+            "title": "calc ops module",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685433,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+          "result_summary": "Shipped calc REPL on branch task/t/0003 @ c86af02540ff6d0288914f64baa67d8f3b019d33.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads input lines like '1 + 2' and prints results. Use calc.ops for arithmetic. Also create tests/test_repl.py with at least one happy-path test. The module must be runnable as `python -m calc.repl`. branch_base is main.",
+            "requires": [],
+            "title": "calc REPL",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685463,
+          "id": "t/0004",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+          "result_summary": "Merged 09ab804ad5d37616dc80fc2e529affa16a6ad62b into main; new HEAD 09ab804ad5d37616dc80fc2e529affa16a6ad62b.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685481,
+          "id": "t/0005",
+          "owner_agent": "agent-2",
+          "owner_token": 5,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "",
+    "now_unix": 1778685489,
+    "op": "/main_lock_release",
+    "op_summary": "main_lock_release (agent-2)",
+    "seq": 63,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685333,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: calc/ops.py and calc/repl.py",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685422,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+          "result_summary": "Shipped calc ops module on branch task/t/0002 @ 09ab804ad5d37616dc80fc2e529affa16a6ad62b.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, subtract, multiply, divide as pure functions in calc/ops.py. Also create tests/test_ops.py with unit tests for each function including edge cases (divide by zero should raise ValueError). branch_base is main.",
+            "requires": [],
+            "title": "calc ops module",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685433,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+          "result_summary": "Shipped calc REPL on branch task/t/0003 @ c86af02540ff6d0288914f64baa67d8f3b019d33.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads input lines like '1 + 2' and prints results. Use calc.ops for arithmetic. Also create tests/test_repl.py with at least one happy-path test. The module must be runnable as `python -m calc.repl`. branch_base is main.",
+            "requires": [],
+            "title": "calc REPL",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685463,
+          "id": "t/0004",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+          "result_summary": "Merged 09ab804ad5d37616dc80fc2e529affa16a6ad62b into main; new HEAD 09ab804ad5d37616dc80fc2e529affa16a6ad62b.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685481,
+          "id": "t/0005",
+          "owner_agent": "agent-2",
+          "owner_token": 5,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0005",
+    "now_unix": 1778685507,
+    "op": "/main_lock_acquire",
+    "op_summary": "main_lock_acquire agent-2 (token 8)",
+    "seq": 68,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "agent-2",
+        "holder_merge_task": "t/0005",
+        "lock_token": 8
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685333,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: calc/ops.py and calc/repl.py",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685422,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+          "result_summary": "Shipped calc ops module on branch task/t/0002 @ 09ab804ad5d37616dc80fc2e529affa16a6ad62b.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, subtract, multiply, divide as pure functions in calc/ops.py. Also create tests/test_ops.py with unit tests for each function including edge cases (divide by zero should raise ValueError). branch_base is main.",
+            "requires": [],
+            "title": "calc ops module",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685433,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+          "result_summary": "Shipped calc REPL on branch task/t/0003 @ c86af02540ff6d0288914f64baa67d8f3b019d33.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads input lines like '1 + 2' and prints results. Use calc.ops for arithmetic. Also create tests/test_repl.py with at least one happy-path test. The module must be runnable as `python -m calc.repl`. branch_base is main.",
+            "requires": [],
+            "title": "calc REPL",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685463,
+          "id": "t/0004",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+          "result_summary": "Merged 09ab804ad5d37616dc80fc2e529affa16a6ad62b into main; new HEAD 09ab804ad5d37616dc80fc2e529affa16a6ad62b.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685501,
+          "id": "t/0005",
+          "owner_agent": "agent-2",
+          "owner_token": 5,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "",
+    "now_unix": 1778685560,
+    "op": "/main_lock_release",
+    "op_summary": "main_lock_release (agent-2)",
+    "seq": 86,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685333,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: calc/ops.py and calc/repl.py",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685422,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+          "result_summary": "Shipped calc ops module on branch task/t/0002 @ 09ab804ad5d37616dc80fc2e529affa16a6ad62b.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, subtract, multiply, divide as pure functions in calc/ops.py. Also create tests/test_ops.py with unit tests for each function including edge cases (divide by zero should raise ValueError). branch_base is main.",
+            "requires": [],
+            "title": "calc ops module",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685433,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+          "result_summary": "Shipped calc REPL on branch task/t/0003 @ c86af02540ff6d0288914f64baa67d8f3b019d33.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads input lines like '1 + 2' and prints results. Use calc.ops for arithmetic. Also create tests/test_repl.py with at least one happy-path test. The module must be runnable as `python -m calc.repl`. branch_base is main.",
+            "requires": [],
+            "title": "calc REPL",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685463,
+          "id": "t/0004",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+          "result_summary": "Merged 09ab804ad5d37616dc80fc2e529affa16a6ad62b into main; new HEAD 09ab804ad5d37616dc80fc2e529affa16a6ad62b.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685552,
+          "id": "t/0005",
+          "owner_agent": "agent-2",
+          "owner_token": 5,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0005",
+    "now_unix": 1778685560,
+    "op": "/task_complete",
+    "op_summary": "task_complete t/0005 (agent-2)",
+    "seq": 87,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685333,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: calc/ops.py and calc/repl.py",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685422,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+          "result_summary": "Shipped calc ops module on branch task/t/0002 @ 09ab804ad5d37616dc80fc2e529affa16a6ad62b.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, subtract, multiply, divide as pure functions in calc/ops.py. Also create tests/test_ops.py with unit tests for each function including edge cases (divide by zero should raise ValueError). branch_base is main.",
+            "requires": [],
+            "title": "calc ops module",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685433,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+          "result_summary": "Shipped calc REPL on branch task/t/0003 @ c86af02540ff6d0288914f64baa67d8f3b019d33.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads input lines like '1 + 2' and prints results. Use calc.ops for arithmetic. Also create tests/test_repl.py with at least one happy-path test. The module must be runnable as `python -m calc.repl`. branch_base is main.",
+            "requires": [],
+            "title": "calc REPL",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685463,
+          "id": "t/0004",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+          "result_summary": "Merged 09ab804ad5d37616dc80fc2e529affa16a6ad62b into main; new HEAD 09ab804ad5d37616dc80fc2e529affa16a6ad62b.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "09ab804ad5d37616dc80fc2e529affa16a6ad62b",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778685552,
+          "id": "t/0005",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "cd0bf2c708f4494563cb16fd8b5b3f12025a55be",
+          "result_summary": "Merged c86af02540ff6d0288914f64baa67d8f3b019d33 into main; resolved calc/ops.py conflict by keeping ValueError in divide() and adding evaluate() with ZeroDivisionError for division; all 24 tests pass; new HEAD cd0bf2c708f4494563cb16fd8b5b3f12025a55be.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "c86af02540ff6d0288914f64baa67d8f3b019d33",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "done"
+        }
+      ]
+    }
+  }
+]

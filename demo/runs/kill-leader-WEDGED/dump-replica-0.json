@@ -1,0 +1,69 @@
+{
+  "halted_by": "",
+  "halted_reason": "",
+  "main_lock": {
+    "holder_agent": "",
+    "holder_merge_task": "",
+    "lock_token": 0
+  },
+  "swarm_halted": false,
+  "tasks": [
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778699554,
+      "id": "t/0001",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "",
+      "result_summary": "Decomposed into two implement tasks: ops functions and REPL",
+      "spec": {
+        "depth": 0,
+        "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+        "requires": [],
+        "title": "Build a CLI calculator",
+        "type": "plan"
+      },
+      "status": "done"
+    },
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778699603,
+      "id": "t/0002",
+      "owner_agent": "agent-3",
+      "owner_token": 2,
+      "result_branch": "",
+      "result_summary": "",
+      "spec": {
+        "branch_base": "main",
+        "depth": 1,
+        "parent_id": "t/0001",
+        "prompt": "Create calc/ops.py with add, sub, mul, div pure functions. Also create tests/test_ops.py with unit tests for all four functions. Make sure calc/__init__.py exists so calc is a proper package. branch_base: main.",
+        "requires": [],
+        "title": "Implement calc/ops.py with pure functions and tests",
+        "type": "implement"
+      },
+      "status": "in_progress"
+    },
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 0,
+      "id": "t/0003",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "",
+      "result_summary": "",
+      "spec": {
+        "branch_base": "main",
+        "depth": 1,
+        "parent_id": "t/0001",
+        "prompt": "Create calc/repl.py providing a REPL that imports from calc.ops. The REPL should accept input lines like '1 + 2' and print results. Running `python -m calc.repl` should start the REPL. Also create tests/test_repl.py covering one happy-path interaction. branch_base: main. This task depends on the calc/ops.py task being done first.",
+        "requires": [
+          "t/0002"
+        ],
+        "title": "Implement calc/repl.py REPL and tests",
+        "type": "implement"
+      },
+      "status": "pending"
+    }
+  ]
+}

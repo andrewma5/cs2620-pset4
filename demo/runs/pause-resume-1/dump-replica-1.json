@@ -1,0 +1,111 @@
+{
+  "halted_by": "",
+  "halted_reason": "",
+  "main_lock": {
+    "holder_agent": "",
+    "holder_merge_task": "",
+    "lock_token": 0
+  },
+  "swarm_halted": false,
+  "tasks": [
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778697745,
+      "id": "t/0001",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "",
+      "result_summary": "Decomposed into 2 implement tasks: ops and repl",
+      "spec": {
+        "depth": 0,
+        "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+        "requires": [],
+        "title": "Build a CLI calculator",
+        "type": "plan"
+      },
+      "status": "done"
+    },
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778697826,
+      "id": "t/0002",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+      "result_summary": "Shipped calc/ops.py — pure arithmetic functions + tests on branch task/t/0002 @ d02cb251e7898da2d1d241907fd879cc180a0597.",
+      "spec": {
+        "branch_base": "main",
+        "depth": 1,
+        "parent_id": "t/0001",
+        "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py. branch_base: main. The module must be importable as `from calc.ops import add, sub, mul, div`. Tests must pass with pytest.",
+        "requires": [],
+        "title": "calc/ops.py — pure arithmetic functions + tests",
+        "type": "implement"
+      },
+      "status": "done"
+    },
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778697858,
+      "id": "t/0003",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+      "result_summary": "Shipped calc/repl.py — interactive REPL + tests on branch task/t/0003 @ 90a709f1a961677a6a44cf88cf0c63fe3cb108be.",
+      "spec": {
+        "branch_base": "main",
+        "depth": 1,
+        "parent_id": "t/0001",
+        "prompt": "Implement a REPL in calc/repl.py that reads lines like \"1 + 2\" from stdin, uses calc.ops to compute the result, and prints it. Must be runnable as `python -m calc.repl`. Write tests in tests/test_repl.py covering one happy-path interaction. branch_base: main. Requires calc/ops.py to be importable (it will be available at merge time).",
+        "requires": [],
+        "title": "calc/repl.py — interactive REPL + tests",
+        "type": "implement"
+      },
+      "status": "done"
+    },
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778697882,
+      "id": "t/0004",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+      "result_summary": "Merged d02cb251e7898da2d1d241907fd879cc180a0597 into main; new HEAD d02cb251e7898da2d1d241907fd879cc180a0597.",
+      "spec": {
+        "branch_base": "main",
+        "depth": 1,
+        "implement_branch_sha": "d02cb251e7898da2d1d241907fd879cc180a0597",
+        "parent_id": "t/0002",
+        "prompt": "",
+        "requires": [
+          "t/0002"
+        ],
+        "title": "merge t/0002",
+        "type": "merge"
+      },
+      "status": "done"
+    },
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778697959,
+      "id": "t/0005",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "c5195eaca6f9eb978a245682402a3a0e2c7abba4",
+      "result_summary": "Merged 90a709f1a961677a6a44cf88cf0c63fe3cb110be into main (resolved add/add conflicts in ops.py and __pycache__); new HEAD c5195eaca6f9eb978a245682402a3a0e2c7abba4.",
+      "spec": {
+        "branch_base": "main",
+        "depth": 1,
+        "implement_branch_sha": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+        "parent_id": "t/0003",
+        "prompt": "",
+        "requires": [
+          "t/0003"
+        ],
+        "title": "merge t/0003",
+        "type": "merge"
+      },
+      "status": "done"
+    }
+  ]
+}

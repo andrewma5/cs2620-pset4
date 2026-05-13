@@ -1,0 +1,1922 @@
+[
+  {
+    "affected_task_id": "",
+    "now_unix": 0,
+    "op": "",
+    "op_summary": "(initial state)",
+    "seq": 0,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": []
+    }
+  },
+  {
+    "affected_task_id": "t/0001",
+    "now_unix": 1778697649,
+    "op": "/task_create",
+    "op_summary": "task_create t/0001 (plan) \"Build a CLI calculator\"",
+    "seq": 1,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 0,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0001",
+    "now_unix": 1778697711,
+    "op": "/task_claim",
+    "op_summary": "task_claim agent-1 -> t/0001 (token 1)",
+    "seq": 2,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697711,
+          "id": "t/0001",
+          "owner_agent": "agent-1",
+          "owner_token": 1,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0001",
+    "now_unix": 1778697747,
+    "op": "/task_complete",
+    "op_summary": "task_complete t/0001 (agent-1) + 2 child(ren)",
+    "seq": 14,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697745,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: ops and repl",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 0,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py. branch_base: main. The module must be importable as `from calc.ops import add, sub, mul, div`. Tests must pass with pytest.",
+            "requires": [],
+            "title": "calc/ops.py — pure arithmetic functions + tests",
+            "type": "implement"
+          },
+          "status": "pending"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 0,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads lines like \"1 + 2\" from stdin, uses calc.ops to compute the result, and prints it. Must be runnable as `python -m calc.repl`. Write tests in tests/test_repl.py covering one happy-path interaction. branch_base: main. Requires calc/ops.py to be importable (it will be available at merge time).",
+            "requires": [],
+            "title": "calc/repl.py — interactive REPL + tests",
+            "type": "implement"
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0002",
+    "now_unix": 1778697748,
+    "op": "/task_claim",
+    "op_summary": "task_claim agent-3 -> t/0002 (token 2)",
+    "seq": 15,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697745,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: ops and repl",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697748,
+          "id": "t/0002",
+          "owner_agent": "agent-3",
+          "owner_token": 2,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py. branch_base: main. The module must be importable as `from calc.ops import add, sub, mul, div`. Tests must pass with pytest.",
+            "requires": [],
+            "title": "calc/ops.py — pure arithmetic functions + tests",
+            "type": "implement"
+          },
+          "status": "in_progress"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 0,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads lines like \"1 + 2\" from stdin, uses calc.ops to compute the result, and prints it. Must be runnable as `python -m calc.repl`. Write tests in tests/test_repl.py covering one happy-path interaction. branch_base: main. Requires calc/ops.py to be importable (it will be available at merge time).",
+            "requires": [],
+            "title": "calc/repl.py — interactive REPL + tests",
+            "type": "implement"
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0003",
+    "now_unix": 1778697749,
+    "op": "/task_claim",
+    "op_summary": "task_claim agent-2 -> t/0003 (token 3)",
+    "seq": 16,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697745,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: ops and repl",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697748,
+          "id": "t/0002",
+          "owner_agent": "agent-3",
+          "owner_token": 2,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py. branch_base: main. The module must be importable as `from calc.ops import add, sub, mul, div`. Tests must pass with pytest.",
+            "requires": [],
+            "title": "calc/ops.py — pure arithmetic functions + tests",
+            "type": "implement"
+          },
+          "status": "in_progress"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697749,
+          "id": "t/0003",
+          "owner_agent": "agent-2",
+          "owner_token": 3,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads lines like \"1 + 2\" from stdin, uses calc.ops to compute the result, and prints it. Must be runnable as `python -m calc.repl`. Write tests in tests/test_repl.py covering one happy-path interaction. branch_base: main. Requires calc/ops.py to be importable (it will be available at merge time).",
+            "requires": [],
+            "title": "calc/repl.py — interactive REPL + tests",
+            "type": "implement"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0002",
+    "now_unix": 1778697834,
+    "op": "/task_complete",
+    "op_summary": "task_complete t/0002 (agent-3) + merge t/0004",
+    "seq": 41,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697745,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: ops and repl",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697826,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Shipped calc/ops.py — pure arithmetic functions + tests on branch task/t/0002 @ d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py. branch_base: main. The module must be importable as `from calc.ops import add, sub, mul, div`. Tests must pass with pytest.",
+            "requires": [],
+            "title": "calc/ops.py — pure arithmetic functions + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697828,
+          "id": "t/0003",
+          "owner_agent": "agent-2",
+          "owner_token": 3,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads lines like \"1 + 2\" from stdin, uses calc.ops to compute the result, and prints it. Must be runnable as `python -m calc.repl`. Write tests in tests/test_repl.py covering one happy-path interaction. branch_base: main. Requires calc/ops.py to be importable (it will be available at merge time).",
+            "requires": [],
+            "title": "calc/repl.py — interactive REPL + tests",
+            "type": "implement"
+          },
+          "status": "in_progress"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 0,
+          "id": "t/0004",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "d02cb251e7898da2d1d241907fd879cc180a0597",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0004",
+    "now_unix": 1778697835,
+    "op": "/task_claim",
+    "op_summary": "task_claim agent-1 -> t/0004 (token 4)",
+    "seq": 42,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697745,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: ops and repl",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697826,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Shipped calc/ops.py — pure arithmetic functions + tests on branch task/t/0002 @ d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py. branch_base: main. The module must be importable as `from calc.ops import add, sub, mul, div`. Tests must pass with pytest.",
+            "requires": [],
+            "title": "calc/ops.py — pure arithmetic functions + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697828,
+          "id": "t/0003",
+          "owner_agent": "agent-2",
+          "owner_token": 3,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads lines like \"1 + 2\" from stdin, uses calc.ops to compute the result, and prints it. Must be runnable as `python -m calc.repl`. Write tests in tests/test_repl.py covering one happy-path interaction. branch_base: main. Requires calc/ops.py to be importable (it will be available at merge time).",
+            "requires": [],
+            "title": "calc/repl.py — interactive REPL + tests",
+            "type": "implement"
+          },
+          "status": "in_progress"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697835,
+          "id": "t/0004",
+          "owner_agent": "agent-1",
+          "owner_token": 4,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "d02cb251e7898da2d1d241907fd879cc180a0597",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0003",
+    "now_unix": 1778697866,
+    "op": "/task_complete",
+    "op_summary": "task_complete t/0003 (agent-2) + merge t/0005",
+    "seq": 52,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697745,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: ops and repl",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697826,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Shipped calc/ops.py — pure arithmetic functions + tests on branch task/t/0002 @ d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py. branch_base: main. The module must be importable as `from calc.ops import add, sub, mul, div`. Tests must pass with pytest.",
+            "requires": [],
+            "title": "calc/ops.py — pure arithmetic functions + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697858,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+          "result_summary": "Shipped calc/repl.py — interactive REPL + tests on branch task/t/0003 @ 90a709f1a961677a6a44cf88cf0c63fe3cb108be.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads lines like \"1 + 2\" from stdin, uses calc.ops to compute the result, and prints it. Must be runnable as `python -m calc.repl`. Write tests in tests/test_repl.py covering one happy-path interaction. branch_base: main. Requires calc/ops.py to be importable (it will be available at merge time).",
+            "requires": [],
+            "title": "calc/repl.py — interactive REPL + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697861,
+          "id": "t/0004",
+          "owner_agent": "agent-1",
+          "owner_token": 4,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "d02cb251e7898da2d1d241907fd879cc180a0597",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 0,
+          "id": "t/0005",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0005",
+    "now_unix": 1778697871,
+    "op": "/task_claim",
+    "op_summary": "task_claim agent-3 -> t/0005 (token 5)",
+    "seq": 53,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697745,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: ops and repl",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697826,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Shipped calc/ops.py — pure arithmetic functions + tests on branch task/t/0002 @ d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py. branch_base: main. The module must be importable as `from calc.ops import add, sub, mul, div`. Tests must pass with pytest.",
+            "requires": [],
+            "title": "calc/ops.py — pure arithmetic functions + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697858,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+          "result_summary": "Shipped calc/repl.py — interactive REPL + tests on branch task/t/0003 @ 90a709f1a961677a6a44cf88cf0c63fe3cb108be.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads lines like \"1 + 2\" from stdin, uses calc.ops to compute the result, and prints it. Must be runnable as `python -m calc.repl`. Write tests in tests/test_repl.py covering one happy-path interaction. branch_base: main. Requires calc/ops.py to be importable (it will be available at merge time).",
+            "requires": [],
+            "title": "calc/repl.py — interactive REPL + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697861,
+          "id": "t/0004",
+          "owner_agent": "agent-1",
+          "owner_token": 4,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "d02cb251e7898da2d1d241907fd879cc180a0597",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697871,
+          "id": "t/0005",
+          "owner_agent": "agent-3",
+          "owner_token": 5,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0004",
+    "now_unix": 1778697876,
+    "op": "/main_lock_acquire",
+    "op_summary": "main_lock_acquire agent-1 (token 6)",
+    "seq": 55,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "agent-1",
+        "holder_merge_task": "t/0004",
+        "lock_token": 6
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697745,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: ops and repl",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697826,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Shipped calc/ops.py — pure arithmetic functions + tests on branch task/t/0002 @ d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py. branch_base: main. The module must be importable as `from calc.ops import add, sub, mul, div`. Tests must pass with pytest.",
+            "requires": [],
+            "title": "calc/ops.py — pure arithmetic functions + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697858,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+          "result_summary": "Shipped calc/repl.py — interactive REPL + tests on branch task/t/0003 @ 90a709f1a961677a6a44cf88cf0c63fe3cb108be.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads lines like \"1 + 2\" from stdin, uses calc.ops to compute the result, and prints it. Must be runnable as `python -m calc.repl`. Write tests in tests/test_repl.py covering one happy-path interaction. branch_base: main. Requires calc/ops.py to be importable (it will be available at merge time).",
+            "requires": [],
+            "title": "calc/repl.py — interactive REPL + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697872,
+          "id": "t/0004",
+          "owner_agent": "agent-1",
+          "owner_token": 4,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "d02cb251e7898da2d1d241907fd879cc180a0597",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697871,
+          "id": "t/0005",
+          "owner_agent": "agent-3",
+          "owner_token": 5,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "",
+    "now_unix": 1778697888,
+    "op": "/main_lock_release",
+    "op_summary": "main_lock_release (agent-1)",
+    "seq": 60,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697745,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: ops and repl",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697826,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Shipped calc/ops.py — pure arithmetic functions + tests on branch task/t/0002 @ d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py. branch_base: main. The module must be importable as `from calc.ops import add, sub, mul, div`. Tests must pass with pytest.",
+            "requires": [],
+            "title": "calc/ops.py — pure arithmetic functions + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697858,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+          "result_summary": "Shipped calc/repl.py — interactive REPL + tests on branch task/t/0003 @ 90a709f1a961677a6a44cf88cf0c63fe3cb108be.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads lines like \"1 + 2\" from stdin, uses calc.ops to compute the result, and prints it. Must be runnable as `python -m calc.repl`. Write tests in tests/test_repl.py covering one happy-path interaction. branch_base: main. Requires calc/ops.py to be importable (it will be available at merge time).",
+            "requires": [],
+            "title": "calc/repl.py — interactive REPL + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697882,
+          "id": "t/0004",
+          "owner_agent": "agent-1",
+          "owner_token": 4,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "d02cb251e7898da2d1d241907fd879cc180a0597",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697878,
+          "id": "t/0005",
+          "owner_agent": "agent-3",
+          "owner_token": 5,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0004",
+    "now_unix": 1778697888,
+    "op": "/task_complete",
+    "op_summary": "task_complete t/0004 (agent-1)",
+    "seq": 62,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697745,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: ops and repl",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697826,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Shipped calc/ops.py — pure arithmetic functions + tests on branch task/t/0002 @ d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py. branch_base: main. The module must be importable as `from calc.ops import add, sub, mul, div`. Tests must pass with pytest.",
+            "requires": [],
+            "title": "calc/ops.py — pure arithmetic functions + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697858,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+          "result_summary": "Shipped calc/repl.py — interactive REPL + tests on branch task/t/0003 @ 90a709f1a961677a6a44cf88cf0c63fe3cb108be.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads lines like \"1 + 2\" from stdin, uses calc.ops to compute the result, and prints it. Must be runnable as `python -m calc.repl`. Write tests in tests/test_repl.py covering one happy-path interaction. branch_base: main. Requires calc/ops.py to be importable (it will be available at merge time).",
+            "requires": [],
+            "title": "calc/repl.py — interactive REPL + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697882,
+          "id": "t/0004",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Merged d02cb251e7898da2d1d241907fd879cc180a0597 into main; new HEAD d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "d02cb251e7898da2d1d241907fd879cc180a0597",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697888,
+          "id": "t/0005",
+          "owner_agent": "agent-3",
+          "owner_token": 5,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0005",
+    "now_unix": 1778697912,
+    "op": "/main_lock_acquire",
+    "op_summary": "main_lock_acquire agent-3 (token 7)",
+    "seq": 70,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "agent-3",
+        "holder_merge_task": "t/0005",
+        "lock_token": 7
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697745,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: ops and repl",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697826,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Shipped calc/ops.py — pure arithmetic functions + tests on branch task/t/0002 @ d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py. branch_base: main. The module must be importable as `from calc.ops import add, sub, mul, div`. Tests must pass with pytest.",
+            "requires": [],
+            "title": "calc/ops.py — pure arithmetic functions + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697858,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+          "result_summary": "Shipped calc/repl.py — interactive REPL + tests on branch task/t/0003 @ 90a709f1a961677a6a44cf88cf0c63fe3cb108be.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads lines like \"1 + 2\" from stdin, uses calc.ops to compute the result, and prints it. Must be runnable as `python -m calc.repl`. Write tests in tests/test_repl.py covering one happy-path interaction. branch_base: main. Requires calc/ops.py to be importable (it will be available at merge time).",
+            "requires": [],
+            "title": "calc/repl.py — interactive REPL + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697882,
+          "id": "t/0004",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Merged d02cb251e7898da2d1d241907fd879cc180a0597 into main; new HEAD d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "d02cb251e7898da2d1d241907fd879cc180a0597",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697908,
+          "id": "t/0005",
+          "owner_agent": "agent-3",
+          "owner_token": 5,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "",
+    "now_unix": 1778697918,
+    "op": "/main_lock_release",
+    "op_summary": "main_lock_release (agent-3)",
+    "seq": 72,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697745,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: ops and repl",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697826,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Shipped calc/ops.py — pure arithmetic functions + tests on branch task/t/0002 @ d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py. branch_base: main. The module must be importable as `from calc.ops import add, sub, mul, div`. Tests must pass with pytest.",
+            "requires": [],
+            "title": "calc/ops.py — pure arithmetic functions + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697858,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+          "result_summary": "Shipped calc/repl.py — interactive REPL + tests on branch task/t/0003 @ 90a709f1a961677a6a44cf88cf0c63fe3cb108be.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads lines like \"1 + 2\" from stdin, uses calc.ops to compute the result, and prints it. Must be runnable as `python -m calc.repl`. Write tests in tests/test_repl.py covering one happy-path interaction. branch_base: main. Requires calc/ops.py to be importable (it will be available at merge time).",
+            "requires": [],
+            "title": "calc/repl.py — interactive REPL + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697882,
+          "id": "t/0004",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Merged d02cb251e7898da2d1d241907fd879cc180a0597 into main; new HEAD d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "d02cb251e7898da2d1d241907fd879cc180a0597",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697908,
+          "id": "t/0005",
+          "owner_agent": "agent-3",
+          "owner_token": 5,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0005",
+    "now_unix": 1778697936,
+    "op": "/main_lock_acquire",
+    "op_summary": "main_lock_acquire agent-3 (token 8)",
+    "seq": 78,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "agent-3",
+        "holder_merge_task": "t/0005",
+        "lock_token": 8
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697745,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: ops and repl",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697826,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Shipped calc/ops.py — pure arithmetic functions + tests on branch task/t/0002 @ d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py. branch_base: main. The module must be importable as `from calc.ops import add, sub, mul, div`. Tests must pass with pytest.",
+            "requires": [],
+            "title": "calc/ops.py — pure arithmetic functions + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697858,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+          "result_summary": "Shipped calc/repl.py — interactive REPL + tests on branch task/t/0003 @ 90a709f1a961677a6a44cf88cf0c63fe3cb108be.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads lines like \"1 + 2\" from stdin, uses calc.ops to compute the result, and prints it. Must be runnable as `python -m calc.repl`. Write tests in tests/test_repl.py covering one happy-path interaction. branch_base: main. Requires calc/ops.py to be importable (it will be available at merge time).",
+            "requires": [],
+            "title": "calc/repl.py — interactive REPL + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697882,
+          "id": "t/0004",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Merged d02cb251e7898da2d1d241907fd879cc180a0597 into main; new HEAD d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "d02cb251e7898da2d1d241907fd879cc180a0597",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697928,
+          "id": "t/0005",
+          "owner_agent": "agent-3",
+          "owner_token": 5,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "",
+    "now_unix": 1778697936,
+    "op": "/main_lock_release",
+    "op_summary": "main_lock_release (agent-3)",
+    "seq": 79,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697745,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: ops and repl",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697826,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Shipped calc/ops.py — pure arithmetic functions + tests on branch task/t/0002 @ d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py. branch_base: main. The module must be importable as `from calc.ops import add, sub, mul, div`. Tests must pass with pytest.",
+            "requires": [],
+            "title": "calc/ops.py — pure arithmetic functions + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697858,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+          "result_summary": "Shipped calc/repl.py — interactive REPL + tests on branch task/t/0003 @ 90a709f1a961677a6a44cf88cf0c63fe3cb108be.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads lines like \"1 + 2\" from stdin, uses calc.ops to compute the result, and prints it. Must be runnable as `python -m calc.repl`. Write tests in tests/test_repl.py covering one happy-path interaction. branch_base: main. Requires calc/ops.py to be importable (it will be available at merge time).",
+            "requires": [],
+            "title": "calc/repl.py — interactive REPL + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697882,
+          "id": "t/0004",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Merged d02cb251e7898da2d1d241907fd879cc180a0597 into main; new HEAD d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "d02cb251e7898da2d1d241907fd879cc180a0597",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697928,
+          "id": "t/0005",
+          "owner_agent": "agent-3",
+          "owner_token": 5,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0005",
+    "now_unix": 1778697944,
+    "op": "/main_lock_acquire",
+    "op_summary": "main_lock_acquire agent-3 (token 9)",
+    "seq": 83,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "agent-3",
+        "holder_merge_task": "t/0005",
+        "lock_token": 9
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697745,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: ops and repl",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697826,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Shipped calc/ops.py — pure arithmetic functions + tests on branch task/t/0002 @ d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py. branch_base: main. The module must be importable as `from calc.ops import add, sub, mul, div`. Tests must pass with pytest.",
+            "requires": [],
+            "title": "calc/ops.py — pure arithmetic functions + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697858,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+          "result_summary": "Shipped calc/repl.py — interactive REPL + tests on branch task/t/0003 @ 90a709f1a961677a6a44cf88cf0c63fe3cb108be.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads lines like \"1 + 2\" from stdin, uses calc.ops to compute the result, and prints it. Must be runnable as `python -m calc.repl`. Write tests in tests/test_repl.py covering one happy-path interaction. branch_base: main. Requires calc/ops.py to be importable (it will be available at merge time).",
+            "requires": [],
+            "title": "calc/repl.py — interactive REPL + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697882,
+          "id": "t/0004",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Merged d02cb251e7898da2d1d241907fd879cc180a0597 into main; new HEAD d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "d02cb251e7898da2d1d241907fd879cc180a0597",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697938,
+          "id": "t/0005",
+          "owner_agent": "agent-3",
+          "owner_token": 5,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "",
+    "now_unix": 1778697968,
+    "op": "/main_lock_release",
+    "op_summary": "main_lock_release (agent-3)",
+    "seq": 90,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697745,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: ops and repl",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697826,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Shipped calc/ops.py — pure arithmetic functions + tests on branch task/t/0002 @ d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py. branch_base: main. The module must be importable as `from calc.ops import add, sub, mul, div`. Tests must pass with pytest.",
+            "requires": [],
+            "title": "calc/ops.py — pure arithmetic functions + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697858,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+          "result_summary": "Shipped calc/repl.py — interactive REPL + tests on branch task/t/0003 @ 90a709f1a961677a6a44cf88cf0c63fe3cb108be.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads lines like \"1 + 2\" from stdin, uses calc.ops to compute the result, and prints it. Must be runnable as `python -m calc.repl`. Write tests in tests/test_repl.py covering one happy-path interaction. branch_base: main. Requires calc/ops.py to be importable (it will be available at merge time).",
+            "requires": [],
+            "title": "calc/repl.py — interactive REPL + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697882,
+          "id": "t/0004",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Merged d02cb251e7898da2d1d241907fd879cc180a0597 into main; new HEAD d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "d02cb251e7898da2d1d241907fd879cc180a0597",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697959,
+          "id": "t/0005",
+          "owner_agent": "agent-3",
+          "owner_token": 5,
+          "result_branch": "",
+          "result_summary": "",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "in_progress"
+        }
+      ]
+    }
+  },
+  {
+    "affected_task_id": "t/0005",
+    "now_unix": 1778697968,
+    "op": "/task_complete",
+    "op_summary": "task_complete t/0005 (agent-3)",
+    "seq": 91,
+    "state": {
+      "halted_by": "",
+      "halted_reason": "",
+      "main_lock": {
+        "holder_agent": "",
+        "holder_merge_task": "",
+        "lock_token": 0
+      },
+      "swarm_halted": false,
+      "tasks": [
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697745,
+          "id": "t/0001",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "",
+          "result_summary": "Decomposed into 2 implement tasks: ops and repl",
+          "spec": {
+            "depth": 0,
+            "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+            "requires": [],
+            "title": "Build a CLI calculator",
+            "type": "plan"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697826,
+          "id": "t/0002",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Shipped calc/ops.py — pure arithmetic functions + tests on branch task/t/0002 @ d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py. branch_base: main. The module must be importable as `from calc.ops import add, sub, mul, div`. Tests must pass with pytest.",
+            "requires": [],
+            "title": "calc/ops.py — pure arithmetic functions + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697858,
+          "id": "t/0003",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+          "result_summary": "Shipped calc/repl.py — interactive REPL + tests on branch task/t/0003 @ 90a709f1a961677a6a44cf88cf0c63fe3cb108be.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "parent_id": "t/0001",
+            "prompt": "Implement a REPL in calc/repl.py that reads lines like \"1 + 2\" from stdin, uses calc.ops to compute the result, and prints it. Must be runnable as `python -m calc.repl`. Write tests in tests/test_repl.py covering one happy-path interaction. branch_base: main. Requires calc/ops.py to be importable (it will be available at merge time).",
+            "requires": [],
+            "title": "calc/repl.py — interactive REPL + tests",
+            "type": "implement"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697882,
+          "id": "t/0004",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "d02cb251e7898da2d1d241907fd879cc180a0597",
+          "result_summary": "Merged d02cb251e7898da2d1d241907fd879cc180a0597 into main; new HEAD d02cb251e7898da2d1d241907fd879cc180a0597.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "d02cb251e7898da2d1d241907fd879cc180a0597",
+            "parent_id": "t/0002",
+            "prompt": "",
+            "requires": [
+              "t/0002"
+            ],
+            "title": "merge t/0002",
+            "type": "merge"
+          },
+          "status": "done"
+        },
+        {
+          "fail_reason": "",
+          "heartbeat_unix": 1778697959,
+          "id": "t/0005",
+          "owner_agent": "",
+          "owner_token": 0,
+          "result_branch": "c5195eaca6f9eb978a245682402a3a0e2c7abba4",
+          "result_summary": "Merged 90a709f1a961677a6a44cf88cf0c63fe3cb110be into main (resolved add/add conflicts in ops.py and __pycache__); new HEAD c5195eaca6f9eb978a245682402a3a0e2c7abba4.",
+          "spec": {
+            "branch_base": "main",
+            "depth": 1,
+            "implement_branch_sha": "90a709f1a961677a6a44cf88cf0c63fe3cb108be",
+            "parent_id": "t/0003",
+            "prompt": "",
+            "requires": [
+              "t/0003"
+            ],
+            "title": "merge t/0003",
+            "type": "merge"
+          },
+          "status": "done"
+        }
+      ]
+    }
+  }
+]

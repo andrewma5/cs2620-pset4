@@ -1,0 +1,111 @@
+{
+  "halted_by": "",
+  "halted_reason": "",
+  "main_lock": {
+    "holder_agent": "",
+    "holder_merge_task": "",
+    "lock_token": 0
+  },
+  "swarm_halted": false,
+  "tasks": [
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778698914,
+      "id": "t/0001",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "",
+      "result_summary": "Decomposed into 2 implement tasks: calc/ops.py with tests, and calc/repl.py REPL with tests.",
+      "spec": {
+        "depth": 0,
+        "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+        "requires": [],
+        "title": "Build a CLI calculator",
+        "type": "plan"
+      },
+      "status": "done"
+    },
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778698994,
+      "id": "t/0002",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "5f24ef0f8683de1b12a68cbae04ff12b78047d12",
+      "result_summary": "Implemented calc/ops.py with add/sub/mul/div pure functions and tests/test_ops.py with 5 unit tests; all pass.",
+      "spec": {
+        "branch_base": "main",
+        "depth": 1,
+        "parent_id": "t/0001",
+        "prompt": "Create calc/ops.py with pure functions: add(a,b), sub(a,b), mul(a,b), div(a,b). div should raise ValueError on division by zero. Also create tests/test_ops.py with unit tests covering all four operations and the div-by-zero case. Add calc/__init__.py if needed. branch_base: main.",
+        "requires": [],
+        "title": "Implement calc/ops.py with pure functions and tests",
+        "type": "implement"
+      },
+      "status": "done"
+    },
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778699051,
+      "id": "t/0003",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "994f6e65d3af8304e1062a0a6a4d94ccbe0c3a96",
+      "result_summary": "Shipped calc/repl.py REPL + tests/test_repl.py on branch task/t/0003 @ 994f6e65d3af8304e1062a0a6a4d94ccbe0c3a96; all 3 tests pass.",
+      "spec": {
+        "branch_base": "main",
+        "depth": 1,
+        "parent_id": "t/0001",
+        "prompt": "Create calc/repl.py providing a REPL that imports from calc.ops. It should accept input lines like '1 + 2' and print the result. Running `python -m calc.repl` should start the REPL loop. Also create tests/test_repl.py covering one happy-path interaction (e.g., feeding input '3 * 4' and checking output '12'). branch_base: main.",
+        "requires": [],
+        "title": "Implement calc/repl.py REPL and tests",
+        "type": "implement"
+      },
+      "status": "done"
+    },
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778699079,
+      "id": "t/0004",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "0efaab8286761bc4fc84d1f1efde4218de8881f9",
+      "result_summary": "Merged 5f24ef0f8683de1b12a68cbae04ff12b78047d12 into main; new HEAD 0efaab8286761bc4fc84d1f1efde4218de8881f9.",
+      "spec": {
+        "branch_base": "main",
+        "depth": 1,
+        "implement_branch_sha": "5f24ef0f8683de1b12a68cbae04ff12b78047d12",
+        "parent_id": "t/0002",
+        "prompt": "",
+        "requires": [
+          "t/0002"
+        ],
+        "title": "merge t/0002",
+        "type": "merge"
+      },
+      "status": "done"
+    },
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778699297,
+      "id": "t/0005",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "2fe0801c374d4cb432d08570da7fc4f2c310c926",
+      "result_summary": "Merged 994f6e65d3af8304e1062a0a6a4d94ccbe0c3a96 into main; resolved conflict in calc/ops.py by adding evaluate() and backward-compat aliases; new HEAD 2fe0801c374d4cb432d08570da7fc4f2c310c926.",
+      "spec": {
+        "branch_base": "main",
+        "depth": 1,
+        "implement_branch_sha": "994f6e65d3af8304e1062a0a6a4d94ccbe0c3a96",
+        "parent_id": "t/0003",
+        "prompt": "",
+        "requires": [
+          "t/0003"
+        ],
+        "title": "merge t/0003",
+        "type": "merge"
+      },
+      "status": "done"
+    }
+  ]
+}

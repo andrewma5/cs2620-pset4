@@ -1,0 +1,111 @@
+{
+  "halted_by": "",
+  "halted_reason": "",
+  "main_lock": {
+    "holder_agent": "",
+    "holder_merge_task": "",
+    "lock_token": 0
+  },
+  "swarm_halted": false,
+  "tasks": [
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778688190,
+      "id": "t/0001",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "",
+      "result_summary": "Decomposed 'Build a CLI calculator' into 2 tasks.",
+      "spec": {
+        "depth": 0,
+        "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+        "requires": [],
+        "title": "Build a CLI calculator",
+        "type": "plan"
+      },
+      "status": "done"
+    },
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778688269,
+      "id": "t/0002",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "2a65813f74cb166806b8f14c7d8f102fd8200f3c",
+      "result_summary": "Shipped calc/ops.py arithmetic functions on branch task/t/0002 @ 2a65813f74cb166806b8f14c7d8f102fd8200f3c.",
+      "spec": {
+        "branch_base": "main",
+        "depth": 1,
+        "parent_id": "t/0001",
+        "prompt": "Implement add, sub, mul, div as pure functions in calc/ops.py. Write unit tests in tests/test_ops.py covering all four operations. branch_base is main.",
+        "requires": [],
+        "title": "calc/ops.py arithmetic functions",
+        "type": "implement"
+      },
+      "status": "done"
+    },
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778688303,
+      "id": "t/0003",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "f872cba2ca29ba6a2cb78b83378f3ed92cc4eeb5",
+      "result_summary": "Shipped calc/repl.py REPL loop on branch task/t/0003 @ f872cba2ca29ba6a2cb78b83378f3ed92cc4eeb5.",
+      "spec": {
+        "branch_base": "main",
+        "depth": 1,
+        "parent_id": "t/0001",
+        "prompt": "Implement a REPL in calc/repl.py that reads input lines like '1 + 2', parses them, calls calc.ops functions, and prints the result. Add tests in tests/test_repl.py covering one happy-path interaction. The calculator must run end-to-end: `python -m calc.repl`. branch_base is main.",
+        "requires": [],
+        "title": "calc/repl.py REPL loop",
+        "type": "implement"
+      },
+      "status": "done"
+    },
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778688320,
+      "id": "t/0004",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "2a65813f74cb166806b8f14c7d8f102fd8200f3c",
+      "result_summary": "Merged 2a65813f74cb166806b8f14c7d8f102fd8200f3c into main; new HEAD 2a65813f74cb166806b8f14c7d8f102fd8200f3c.",
+      "spec": {
+        "branch_base": "main",
+        "depth": 1,
+        "implement_branch_sha": "2a65813f74cb166806b8f14c7d8f102fd8200f3c",
+        "parent_id": "t/0002",
+        "prompt": "",
+        "requires": [
+          "t/0002"
+        ],
+        "title": "merge t/0002",
+        "type": "merge"
+      },
+      "status": "done"
+    },
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778688406,
+      "id": "t/0005",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "eae353049b4654000d73a22e1a1622b09cbcfc78",
+      "result_summary": "Merged f872cba2ca29ba6a2cb78b83378f3ed92cc4eeb5 into main; new HEAD eae353049b4654000d73a22e1a1622b09cbcfc78.",
+      "spec": {
+        "branch_base": "main",
+        "depth": 1,
+        "implement_branch_sha": "f872cba2ca29ba6a2cb78b83378f3ed92cc4eeb5",
+        "parent_id": "t/0003",
+        "prompt": "",
+        "requires": [
+          "t/0003"
+        ],
+        "title": "merge t/0003",
+        "type": "merge"
+      },
+      "status": "done"
+    }
+  ]
+}
