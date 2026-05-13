@@ -72,16 +72,24 @@ def to_posix(p: Path) -> str:
 
 
 def write_agent(agent_dir: Path, agent_id: str, n_agents: int,
-                repo_dir: Path, assets: Path) -> None:
+                repo_dir: Path, assets: Path, tm_url_list: str) -> None:
     agent_dir.mkdir(parents=True, exist_ok=False)
 
-    template = (assets / "CLAUDE.md.template").read_text(encoding="utf-8")
-    claude_md = (template
-                 .replace("{AGENT_ID}", agent_id)
-                 .replace("{N_AGENTS}", str(n_agents))
-                 .replace("{TM_REPO}", to_posix(repo_dir))
-                 .replace("{TM_WORK}", to_posix(agent_dir)))
-    (agent_dir / "CLAUDE.md").write_text(claude_md, encoding="utf-8")
+    # Both CLAUDE.md.template and tm.env.template use the same set of
+    # {PLACEHOLDER} substitutions, so render them with one helper.
+    def render(template_name: str) -> str:
+        text = (assets / template_name).read_text(encoding="utf-8")
+        return (text
+                .replace("{AGENT_ID}", agent_id)
+                .replace("{N_AGENTS}", str(n_agents))
+                .replace("{TM_REPO}", to_posix(repo_dir))
+                .replace("{TM_WORK}", to_posix(agent_dir))
+                .replace("{TM_URL_LIST}", tm_url_list))
+
+    (agent_dir / "CLAUDE.md").write_text(render("CLAUDE.md.template"),
+                                         encoding="utf-8")
+    (agent_dir / "tm.env").write_text(render("tm.env.template"),
+                                      encoding="utf-8")
 
     dot_claude = agent_dir / ".claude"
     skills_dir = dot_claude / "skills"
@@ -93,6 +101,16 @@ def write_agent(agent_dir: Path, agent_id: str, n_agents: int,
     src_skills = assets / "agent-skills"
     for skill_subdir in sorted(p for p in src_skills.iterdir() if p.is_dir()):
         shutil.copytree(skill_subdir, skills_dir / skill_subdir.name)
+
+    # The bundled tm CLI + bash wrappers must be executable on Unix.
+    # `shutil.copytree` preserves mode bits, but if a user added a file
+    # from Windows it may lack +x. Force it here.
+    task_loop_dir = skills_dir / "task-loop"
+    for name in ("tm", "tm-hb.sh", "tm-wait.sh"):
+        p = task_loop_dir / name
+        if p.is_file():
+            mode = p.stat().st_mode
+            p.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
     shutil.copy2(assets / "settings.json", dot_claude / "settings.json")
 
@@ -106,6 +124,14 @@ def main() -> int:
     ap.add_argument("--force", "-f", action="store_true",
                     help="if set, wipe an existing repo.git/agent-N before "
                          "redeploying. Use this to pick up updated skill files.")
+    ap.add_argument("--tm-urls",
+                    default="http://localhost:8081,http://localhost:8082,"
+                            "http://localhost:8083",
+                    help="comma-separated http URLs of tm-server replicas, "
+                         "tried in order on transport failure. Default "
+                         "matches the docker-compose 3-replica layout. For "
+                         "single-replica testing, pass e.g. "
+                         "--tm-urls http://localhost:8080.")
     args = ap.parse_args()
 
     if args.agents < 1:
@@ -126,9 +152,20 @@ def main() -> int:
 
     assets = find_assets_dir()
 
+    # Sanity-check the URL list: strip empties, ensure each starts with http.
+    tm_urls = [u.strip().rstrip("/") for u in args.tm_urls.split(",") if u.strip()]
+    if not tm_urls:
+        sys.exit("error: --tm-urls cannot be empty")
+    for u in tm_urls:
+        if not (u.startswith("http://") or u.startswith("https://")):
+            sys.exit(f"error: --tm-urls entries must start with http:// or "
+                     f"https:// (got {u!r})")
+    tm_url_list = ",".join(tm_urls)
+
     print(f"deploying swarm into {target}")
     print(f"  agents: {args.agents}")
     print(f"  repo:   {repo_dir}")
+    print(f"  tm urls: {tm_url_list}")
 
     print("initializing bare repo...")
     init_bare_repo(repo_dir)
@@ -137,7 +174,8 @@ def main() -> int:
         agent_id = f"agent-{i}"
         agent_dir = target / agent_id
         print(f"writing {agent_dir}...")
-        write_agent(agent_dir, agent_id, args.agents, repo_dir, assets)
+        write_agent(agent_dir, agent_id, args.agents, repo_dir, assets,
+                    tm_url_list)
 
     summary = {
         "target": to_posix(target),

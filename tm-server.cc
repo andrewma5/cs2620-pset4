@@ -117,7 +117,7 @@ cot::task<cot::http_message> handle(cot::http_message req, tmgr::paxos_replica& 
     try {
         tmreq = tmgr::parse_request(path, body);
     } catch (const std::exception& e) {
-        co_return error_response(404, e.what());
+        co_return error_response(400, e.what());
     }
 
     // Phase 2.3c: propose_and_apply is async. It blocks until paxos decides

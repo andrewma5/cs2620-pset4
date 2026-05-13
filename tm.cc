@@ -105,6 +105,17 @@ void fill_base(request_base& r, const json& j) {
     r.serial = j.value("serial", uint64_t{0});
     r.agent_id = j.value("agent_id", std::string{});
 }
+
+// Require a fencing-token field. A missing token must not silently
+// become 0 — the SM uses 0 as the "unclaimed" sentinel, so a missing
+// field would masquerade as a fenced ownership mismatch and obscure
+// agent payload bugs (typo "tok" vs "token"). Refuse parse instead.
+fencing_token require_token(const json& j, const char* field) {
+    if (!j.contains(field)) {
+        throw std::runtime_error(std::string("missing required field '") + field + "'");
+    }
+    return j[field].get<fencing_token>();
+}
 }  // namespace
 
 // ---- parse_request: dispatch on URL path ----
@@ -131,14 +142,14 @@ request parse_request(std::string_view path, const json& j) {
         task_heartbeat_request r;
         fill_base(r, j);
         r.id = j.value("id", std::string{});
-        r.token = j.value("token", fencing_token{0});
+        r.token = require_token(j, "token");
         return r;
     }
     if (path == "/task_complete") {
         task_complete_request r;
         fill_base(r, j);
         r.id = j.value("id", std::string{});
-        r.token = j.value("token", fencing_token{0});
+        r.token = require_token(j, "token");
         if (j.contains("result_branch")) r.result_branch = j["result_branch"].get<std::string>();
         r.result_summary = j.value("result_summary", std::string{});
         if (j.contains("new_children")) {
@@ -152,7 +163,7 @@ request parse_request(std::string_view path, const json& j) {
         task_fail_request r;
         fill_base(r, j);
         r.id = j.value("id", std::string{});
-        r.token = j.value("token", fencing_token{0});
+        r.token = require_token(j, "token");
         r.reason = j.value("reason", std::string{});
         return r;
     }
@@ -169,13 +180,13 @@ request parse_request(std::string_view path, const json& j) {
         main_lock_acquire_request r;
         fill_base(r, j);
         r.merge_task = j.value("merge_task", std::string{});
-        r.merge_token = j.value("merge_token", fencing_token{0});
+        r.merge_token = require_token(j, "merge_token");
         return r;
     }
     if (path == "/main_lock_release") {
         main_lock_release_request r;
         fill_base(r, j);
-        r.lock_token = j.value("lock_token", fencing_token{0});
+        r.lock_token = require_token(j, "lock_token");
         return r;
     }
     if (path == "/swarm_resume") {

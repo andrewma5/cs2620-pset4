@@ -1,0 +1,392 @@
+#!/usr/bin/env python3
+"""tm — unified RPC client for tm-server.
+
+Single chokepoint for all task-manager HTTP calls. Replaces the four
+helper scripts (tm-hb.sh, tm-wait.sh, tm-complete.sh, tm-fail.sh) and
+the inline `curl -fsSL ... | jq` blocks scattered across the skill
+markdown.
+
+Why it exists:
+
+  The server reads the fencing token from the JSON key "token". A
+  freelanced curl payload that uses "tok" silently sends token=0 and
+  gets fenced even when the agent is the legitimate owner. This CLI
+  is the single chokepoint that builds the payload correctly.
+
+  The server runs as three replicas (multi-paxos). If the replica at
+  URL[0] is down or partitioned, this CLI fails over to URL[1] then
+  URL[2] on transport-level failure (connection refused, timeout,
+  HTTP 5xx). Application-level errors (HTTP 4xx, ok:false body) pass
+  through unchanged — retrying a 400 would hide payload bugs.
+
+Env:
+  TM_URL_LIST  comma-separated http URLs; tried in order on transport
+               failure. e.g. "http://localhost:8081,http://localhost:8082".
+  TM_URL       legacy fallback if TM_URL_LIST is unset.
+  AGENT_ID     this agent's id; baked into every request body.
+
+Subcommands (see argparse help below for full flags):
+
+  tm claim
+  tm hb-once    --id ID --token N
+  tm complete   --id ID --token N [--branch SHA] [--summary "..."]
+                                  [--children-file path.json]
+  tm fail       --id ID --token N --reason "ABANDON: ..."
+  tm create     --spec-file path.json
+                                  [--creator-task ID --creator-token N]
+  tm list       [--status STATUS] [--only-mine]
+  tm dump
+  tm lock-acquire  --merge-task ID --merge-token N
+  tm lock-release  --lock-token N
+
+stdout: server JSON response.
+stderr: human-readable markers ("tm: FENCED on t/0003", etc.) plus
+        transport-failure diagnostics.
+exit:   0 on successful HTTP (even if body says fenced/halted).
+        1 if all replicas exhaust their attempts on a transport error.
+        2 on local validation refusal (fail without ABANDON: prefix).
+"""
+
+import argparse
+import json
+import os
+import random
+import socket
+import sys
+import urllib.error
+import urllib.request
+from pathlib import Path
+
+
+REQUEST_TIMEOUT = 5.0
+
+
+def _replica_urls() -> list[str]:
+    raw = os.environ.get("TM_URL_LIST", "").strip()
+    if raw:
+        urls = [u.strip().rstrip("/") for u in raw.split(",") if u.strip()]
+        if urls:
+            return urls
+    fallback = os.environ.get("TM_URL", "").strip().rstrip("/")
+    if fallback:
+        return [fallback]
+    sys.exit("tm: TM_URL_LIST and TM_URL are both unset")
+
+
+def _agent_id() -> str:
+    aid = os.environ.get("AGENT_ID", "").strip()
+    if not aid:
+        sys.exit("tm: AGENT_ID is unset")
+    return aid
+
+
+def _serial() -> int:
+    # Same generator the bash helpers used: $((RANDOM*RANDOM)). Just a
+    # disambiguator the server logs, no semantic requirement beyond
+    # "fits in int64".
+    return random.randint(0, 2**30)
+
+
+def _http_once(method: str, url: str, body: dict | None) -> tuple[int, dict | str, dict]:
+    """One attempt at one URL. Returns (status, parsed_or_text, headers).
+
+    Raises on transport failure (connection refused, timeout, DNS).
+    Returns normally on any HTTP response, including 4xx/5xx/307.
+    """
+    data = None
+    headers = {"Accept": "application/json"}
+    if body is not None:
+        data = json.dumps(body).encode("utf-8")
+        headers["Content-Type"] = "application/json"
+
+    req = urllib.request.Request(url, data=data, method=method, headers=headers)
+    # We need to handle 307 ourselves (the redirect target is a sibling
+    # replica's URL, not the same path on the same server) and we want
+    # to surface 4xx as a normal response, not an HTTPError. So we
+    # install a no-op handler.
+    opener = urllib.request.build_opener(_NoRedirectHandler())
+    try:
+        resp = opener.open(req, timeout=REQUEST_TIMEOUT)
+        status = resp.status
+        resp_headers = dict(resp.headers.items())
+        text = resp.read().decode("utf-8", errors="replace")
+    except urllib.error.HTTPError as e:
+        # 4xx / 5xx come through here. Capture body for the caller.
+        status = e.code
+        resp_headers = dict(e.headers.items()) if e.headers else {}
+        text = e.read().decode("utf-8", errors="replace") if e.fp else ""
+
+    try:
+        parsed: dict | str = json.loads(text)
+    except json.JSONDecodeError:
+        parsed = text
+    return status, parsed, resp_headers
+
+
+class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Don't auto-follow 3xx — we follow 307 ourselves once, deliberately."""
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _call(method: str, path: str, body: dict | None) -> tuple[int, dict | str]:
+    """Try each replica in TM_URL_LIST. Returns (status, parsed_body).
+
+    Retries on transport failure or HTTP 5xx. Returns immediately on
+    HTTP 2xx (even with body errcode like "fenced") and HTTP 4xx. On
+    HTTP 307, follows the Location header exactly once.
+    """
+    urls = _replica_urls()
+    errs: list[str] = []
+    for url in urls:
+        full = url + path
+        try:
+            status, parsed, headers = _http_once(method, full, body)
+        except (urllib.error.URLError, socket.timeout, ConnectionError,
+                OSError) as e:
+            errs.append(f"{url}: transport {type(e).__name__}: {e}")
+            continue
+
+        if 500 <= status < 600:
+            errs.append(f"{url}: HTTP {status}")
+            continue
+
+        if status == 307:
+            location = headers.get("Location") or headers.get("location")
+            if not location:
+                errs.append(f"{url}: 307 with no Location")
+                continue
+            # One-shot follow. Don't keep cycling — if the target also
+            # 307s, surface it (something's wrong with the leader
+            # discovery).
+            try:
+                status2, parsed2, _ = _http_once(method, location, body)
+            except (urllib.error.URLError, socket.timeout, ConnectionError,
+                    OSError) as e:
+                errs.append(f"{location} (redirect target): transport "
+                            f"{type(e).__name__}: {e}")
+                continue
+            return status2, parsed2
+
+        return status, parsed
+
+    print("tm: all replicas failed:", file=sys.stderr)
+    for e in errs:
+        print(f"  - {e}", file=sys.stderr)
+    sys.exit(1)
+
+
+def _emit(status: int, parsed: dict | str, *, task_id: str | None = None) -> int:
+    """Print server response to stdout, mark fenced/halted on stderr.
+
+    Always returns 0 for successful HTTP regardless of body status —
+    the caller (bash) inspects the JSON if it cares about fenced.
+    """
+    if isinstance(parsed, dict):
+        print(json.dumps(parsed))
+        err = parsed.get("error")
+        if err == "fenced":
+            tag = f" on {task_id}" if task_id else ""
+            print(f"tm: FENCED{tag} (rejected by SM)", file=sys.stderr)
+        elif parsed.get("halted") is True:
+            print("tm: SWARM HALTED", file=sys.stderr)
+    else:
+        print(parsed)
+        if status >= 400:
+            print(f"tm: HTTP {status} (non-JSON body)", file=sys.stderr)
+    return 0
+
+
+# ---------------- subcommand handlers ----------------
+
+def cmd_claim(args: argparse.Namespace) -> int:
+    body = {"agent_id": _agent_id(), "serial": _serial()}
+    if args.prefer_type:
+        body["prefer_type"] = args.prefer_type
+    status, parsed = _call("POST", "/task_claim", body)
+    return _emit(status, parsed)
+
+
+def cmd_hb_once(args: argparse.Namespace) -> int:
+    body = {
+        "agent_id": _agent_id(),
+        "serial": _serial(),
+        "id": args.id,
+        "token": args.token,
+    }
+    status, parsed = _call("POST", "/task_heartbeat", body)
+    return _emit(status, parsed, task_id=args.id)
+
+
+def cmd_complete(args: argparse.Namespace) -> int:
+    children = []
+    if args.children_file:
+        children = _read_json_file(args.children_file)
+        if not isinstance(children, list):
+            sys.exit(f"tm: --children-file must contain a JSON array, "
+                     f"got {type(children).__name__}")
+    body = {
+        "agent_id": _agent_id(),
+        "serial": _serial(),
+        "id": args.id,
+        "token": args.token,
+        "result_summary": args.summary or "",
+        "new_children": children,
+    }
+    if args.branch:
+        body["result_branch"] = args.branch
+    status, parsed = _call("POST", "/task_complete", body)
+    return _emit(status, parsed, task_id=args.id)
+
+
+def cmd_fail(args: argparse.Namespace) -> int:
+    if not args.reason.startswith("ABANDON:"):
+        print(f"tm fail: refusing — --reason must start with 'ABANDON:' "
+              f"(got: {args.reason!r})", file=sys.stderr)
+        return 2
+    body = {
+        "agent_id": _agent_id(),
+        "serial": _serial(),
+        "id": args.id,
+        "token": args.token,
+        "reason": args.reason,
+    }
+    status, parsed = _call("POST", "/task_fail", body)
+    return _emit(status, parsed, task_id=args.id)
+
+
+def cmd_create(args: argparse.Namespace) -> int:
+    spec = _read_json_file(args.spec_file)
+    if not isinstance(spec, dict):
+        sys.exit(f"tm: --spec-file must contain a JSON object, "
+                 f"got {type(spec).__name__}")
+    body = {
+        "agent_id": _agent_id(),
+        "serial": _serial(),
+        "spec": spec,
+    }
+    if args.creator_task:
+        body["creator_task"] = args.creator_task
+    if args.creator_token is not None:
+        body["creator_token"] = args.creator_token
+    status, parsed = _call("POST", "/task_create", body)
+    return _emit(status, parsed)
+
+
+def cmd_list(args: argparse.Namespace) -> int:
+    body = {"agent_id": _agent_id(), "serial": _serial()}
+    if args.status:
+        body["filter_status"] = args.status
+    if args.only_mine:
+        body["only_mine"] = True
+    status, parsed = _call("POST", "/task_list", body)
+    return _emit(status, parsed)
+
+
+def cmd_dump(args: argparse.Namespace) -> int:
+    status, parsed = _call("GET", "/dump", None)
+    return _emit(status, parsed)
+
+
+def cmd_lock_acquire(args: argparse.Namespace) -> int:
+    body = {
+        "agent_id": _agent_id(),
+        "serial": _serial(),
+        "merge_task": args.merge_task,
+        "merge_token": args.merge_token,
+    }
+    status, parsed = _call("POST", "/main_lock_acquire", body)
+    return _emit(status, parsed, task_id=args.merge_task)
+
+
+def cmd_lock_release(args: argparse.Namespace) -> int:
+    body = {
+        "agent_id": _agent_id(),
+        "serial": _serial(),
+        "lock_token": args.lock_token,
+    }
+    status, parsed = _call("POST", "/main_lock_release", body)
+    return _emit(status, parsed)
+
+
+def _read_json_file(path: str) -> object:
+    p = Path(path)
+    if not p.is_file():
+        sys.exit(f"tm: file not found: {path}")
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        sys.exit(f"tm: invalid JSON in {path}: {e}")
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+        prog="tm",
+        description="tm-server RPC client with replica failover.",
+    )
+    sub = p.add_subparsers(dest="command", required=True)
+
+    s = sub.add_parser("claim", help="POST /task_claim")
+    s.add_argument("--prefer-type", choices=["plan", "implement", "merge"])
+    s.set_defaults(func=cmd_claim)
+
+    s = sub.add_parser("hb-once", help="POST /task_heartbeat (one shot)")
+    s.add_argument("--id", required=True)
+    s.add_argument("--token", required=True, type=int)
+    s.set_defaults(func=cmd_hb_once)
+
+    s = sub.add_parser("complete", help="POST /task_complete")
+    s.add_argument("--id", required=True)
+    s.add_argument("--token", required=True, type=int)
+    s.add_argument("--branch", default="",
+                   help="result_branch SHA (omit/empty to skip merge synthesis)")
+    s.add_argument("--summary", default="")
+    s.add_argument("--children-file",
+                   help="path to JSON file containing new_children array")
+    s.set_defaults(func=cmd_complete)
+
+    s = sub.add_parser("fail", help="POST /task_fail (halts the swarm)")
+    s.add_argument("--id", required=True)
+    s.add_argument("--token", required=True, type=int)
+    s.add_argument("--reason", required=True,
+                   help="must start with 'ABANDON:'")
+    s.set_defaults(func=cmd_fail)
+
+    s = sub.add_parser("create", help="POST /task_create")
+    s.add_argument("--spec-file", required=True,
+                   help="path to JSON file containing the spec object")
+    s.add_argument("--creator-task",
+                   help="parent task id (for creator_task in payload)")
+    s.add_argument("--creator-token", type=int,
+                   help="parent task's fencing token")
+    s.set_defaults(func=cmd_create)
+
+    s = sub.add_parser("list", help="POST /task_list")
+    s.add_argument("--status",
+                   choices=["pending", "in_progress", "done", "failed"])
+    s.add_argument("--only-mine", action="store_true")
+    s.set_defaults(func=cmd_list)
+
+    s = sub.add_parser("dump", help="GET /dump")
+    s.set_defaults(func=cmd_dump)
+
+    s = sub.add_parser("lock-acquire", help="POST /main_lock_acquire")
+    s.add_argument("--merge-task", required=True)
+    s.add_argument("--merge-token", required=True, type=int)
+    s.set_defaults(func=cmd_lock_acquire)
+
+    s = sub.add_parser("lock-release", help="POST /main_lock_release")
+    s.add_argument("--lock-token", required=True, type=int)
+    s.set_defaults(func=cmd_lock_release)
+
+    return p
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

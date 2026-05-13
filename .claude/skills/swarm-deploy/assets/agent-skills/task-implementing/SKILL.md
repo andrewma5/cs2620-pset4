@@ -10,24 +10,39 @@ You are a subagent dispatched by the swarm task-loop to complete one
 your branch's tip SHA back to the task manager.
 
 **Env does NOT propagate between Bash tool calls.** Every Bash tool
-call you make MUST start with the standard preamble below. The parent
-gave you the values for `TM_URL`, `AGENT_ID`, `TM_REPO`, `TM_WORK`,
-`TASK_ID`, `TOK`, `SPEC_JSON` in the dispatch prompt — paste them in
-verbatim:
+call you make MUST start by sourcing the agent's `tm.env` and setting
+the three per-task vars from the dispatch prompt:
 
 ```bash
 # === STANDARD PREAMBLE — paste at the top of every Bash tool call ===
-export TM_URL="..."          # from dispatch prompt
-export AGENT_ID="..."        # from dispatch prompt
-export TM_REPO="..."         # from dispatch prompt
-export TM_WORK="..."         # from dispatch prompt
-export TMPDIR="$TM_WORK/tmp"
-export TASK_ID="..."         # from dispatch prompt
-export TOK=...               # from dispatch prompt
-export SPEC_JSON='...'       # from dispatch prompt (single-quoted)
-mkdir -p "$TMPDIR"
-tm() { curl -fsSL -X POST "$TM_URL$1" -H 'Content-Type: application/json' -d "$2"; }
+source "<TM_ENV>"                 # from dispatch prompt (absolute path)
+export TASK_ID="<TASK_ID>"        # from dispatch prompt
+export TOK=<TOK>                  # from dispatch prompt
+export SPEC_JSON='<SPEC_JSON>'    # from dispatch prompt (single-quoted)
 # === END PREAMBLE ===
+```
+
+Sourcing `tm.env` establishes `TM_URL_LIST`, `TM_URL`, `AGENT_ID`,
+`TM_REPO`, `TM_WORK`, `TMPDIR`, `SKILL_DIR`, `CLAIM_OUT`, picks the
+python launcher (`PY`), and defines the `tm()` bash function.
+
+## HARD RULE: all RPC goes through the `tm` CLI
+
+Never hand-roll `curl` against tm-server. The `tm` CLI owns:
+
+- **Field-name correctness.** The server reads the fencing token from
+  the JSON key `token`. A freelanced payload that uses `tok` silently
+  sends `token=0` and gets fenced.
+- **Replica failover.** `TM_URL_LIST` holds the paxos replicas; the
+  CLI rotates on transport failure.
+
+The subcommands you'll use:
+
+```bash
+tm complete --id "$TASK_ID" --token "$TOK" \
+            [--branch SHA] [--summary "..."] [--children-file path.json]
+tm fail     --id "$TASK_ID" --token "$TOK" --reason "ABANDON: ..."
+tm dump
 ```
 
 **The parent agent owns ALL background tm-* scripts.** A separate
@@ -35,7 +50,7 @@ background shell is already pinging `/task_heartbeat` every 10s on your
 behalf. Do NOT launch ANY background script that talks to tm-server
 (no heartbeat, no claim-poll, nothing). Do NOT use Bash with
 `run_in_background`. Do NOT call `KillShell`. You only make foreground
-`tm()` calls.
+`tm` calls.
 
 When you finish, return a one-line summary string to the parent.
 
@@ -43,19 +58,19 @@ When you finish, return a one-line summary string to the parent.
 
 There are exactly **two** ways this task ends:
 
-1. **`task_complete`** — the common case. You either shipped the code
-   (with a `result_branch` SHA), or you handed off follow-up work via
-   `new_children` (with or without a `result_branch`). Almost every
+1. **`tm complete`** — the common case. You either shipped the code
+   (with a `--branch SHA`), or you handed off follow-up work via
+   `--children-file` (with or without `--branch`). Almost every
    blocker — merge conflicts, scope-too-large, tests that won't pass,
    API mismatches with a predecessor — is a hand-off, not a failure.
-2. **`task_fail`** — rare and **terminal for the entire swarm**. Use
+2. **`tm fail`** — rare and **terminal for the entire swarm**. Use
    only when the goal is genuinely unreachable (see the dedicated
    section near the end). Calling this halts new claims swarm-wide
    until a human runs `/swarm_resume`.
 
 The default mental model: if you can describe a follow-up task that
-would unblock the goal, hand it off via `task_complete`'s
-`new_children`. Don't `task_fail`.
+would unblock the goal, hand it off via `tm complete --children-file`.
+Don't `tm fail`.
 
 ## Steps
 
@@ -79,15 +94,15 @@ would unblock the goal, hand it off via `task_complete`'s
    a `plan` task instead. You're given that freedom explicitly: an
    over-large `implement` should be decomposed, not muscled through.
 
-   Build a `new_children` array decomposing the work, then jump to
-   step 9 with `--arg br ""` (no result_branch) and a result_summary
-   like `"scope too large; decomposed into N children instead of
-   implementing"`. No merge task will be synthesized — there's nothing
-   to merge.
+   Build a `new_children` JSON array in a file under `$TMPDIR`, then
+   jump to step 9 with no `--branch` and a `--summary` like `"scope too
+   large; decomposed into N children instead of implementing"`. No
+   merge task will be synthesized — there's nothing to merge.
 
    Example decomposition payload:
    ```bash
-   NEW_CHILDREN_JSON=$(jq -n '[
+   CHILDREN_FILE="$TMPDIR/children-$TASK_ID.json"
+   jq -n '[
      {
        type: "implement",
        title: "step A",
@@ -100,7 +115,7 @@ would unblock the goal, hand it off via `task_complete`'s
        prompt: "...the next slice...",
        branch_base: "main"
      }
-   ]')
+   ]' > "$CHILDREN_FILE"
    ```
 
 3. **Set up the worktree.** (Only if you're proceeding to write code.)
@@ -119,11 +134,11 @@ would unblock the goal, hand it off via `task_complete`'s
    ```
 
 4. **Merge in predecessor branches.** For each `dep` in `requires`,
-   look up its `result_branch` from `/task_list` and merge it.
+   look up its `result_branch` from `tm dump` and merge it.
 
    ```bash
    for DEP in $REQS; do
-       DEP_INFO=$(curl -fsSL "$TM_URL/dump" | jq --arg d "$DEP" '.tasks[]|select(.id==$d)')
+       DEP_INFO=$(tm dump | jq --arg d "$DEP" '.tasks[]|select(.id==$d)')
        DEP_BRANCH=$(echo "$DEP_INFO" | jq -r .result_branch)
        if [ -n "$DEP_BRANCH" ] && [ "$DEP_BRANCH" != "null" ] && [ "$DEP_BRANCH" != "" ]; then
            echo "[implementing] merging predecessor $DEP @ $DEP_BRANCH"
@@ -141,7 +156,8 @@ would unblock the goal, hand it off via `task_complete`'s
                    commit --allow-empty -m "WIP $TITLE (pre-conflict)" || true
                git push origin "task/$TASK_ID"
                PROGRESS_SHA=$(git rev-parse HEAD)
-               NEW_CHILDREN_JSON=$(jq -n \
+               CHILDREN_FILE="$TMPDIR/conflict-$TASK_ID.json"
+               jq -n \
                    --arg dep "$DEP" --arg files "$CONFLICT_FILES" \
                    --arg this_task "$TASK_ID" --arg dep_branch "$DEP_BRANCH" \
                    '[{
@@ -151,15 +167,11 @@ would unblock the goal, hand it off via `task_complete`'s
                               " and resolve conflicts in: " + $files),
                      branch_base: $dep_branch,
                      requires: [$this_task, $dep]
-                   }]')
-               tm /task_complete "$(jq -n \
-                   --arg aid "$AGENT_ID" --argjson s $((RANDOM*RANDOM)) \
-                   --arg id "$TASK_ID" --argjson tok "$TOK" \
-                   --arg sum "merge conflict with $DEP in $CONFLICT_FILES; handing off resolution" \
-                   --arg br "$PROGRESS_SHA" \
-                   --argjson kids "$NEW_CHILDREN_JSON" \
-                   '{agent_id:$aid,serial:$s,id:$id,token:$tok,
-                     result_summary:$sum,result_branch:$br,new_children:$kids}')"
+                   }]' > "$CHILDREN_FILE"
+               tm complete --id "$TASK_ID" --token "$TOK" \
+                   --branch "$PROGRESS_SHA" \
+                   --summary "merge conflict with $DEP in $CONFLICT_FILES; handing off resolution" \
+                   --children-file "$CHILDREN_FILE"
                cd "$HOME"
                # Return summary: "implement $TASK_ID: handed off conflict with $DEP"
                return 0
@@ -175,12 +187,12 @@ would unblock the goal, hand it off via `task_complete`'s
 
    **API mismatch.** If a predecessor's handoff file says the API
    doesn't actually support what your prompt assumes, you have two
-   choices, both via `task_complete`:
+   choices, both via `tm complete`:
    - If you can write a smaller, useful slice on the actual API,
      do that and ship it normally.
-   - Otherwise, complete with **no `result_branch`** and a follow-up
-     `plan` child whose prompt is "re-decompose `<original goal>`
-     given `<dep>` exposes `<actual API>` not `<assumed API>`."
+   - Otherwise, complete with **no `--branch`** and a follow-up `plan`
+     child whose prompt is "re-decompose `<original goal>` given
+     `<dep>` exposes `<actual API>` not `<assumed API>`."
 
 5. **Implement the work.** Standard tools (Read, Edit, Write, Bash).
 
@@ -188,51 +200,23 @@ would unblock the goal, hand it off via `task_complete`'s
    scope is bigger than expected or your approach is wrong:
    - Stop coding. Don't push your branch (it'll be forgotten — the
      worktree leaks until `git worktree prune`, which is fine).
-   - Build a `new_children` array describing the better decomposition.
-     The children's `branch_base` should be `main` (or another fresh
-     base), **not** your abandoned branch — nothing depends on it.
-   - Skip to step 9 with `--arg br ""` (no result_branch) and a
-     result_summary like `"abandoned partial work; decomposed
-     instead — <one-line reason>"`. No merge task synthesizes.
+   - Build a `new_children` JSON file describing the better
+     decomposition. The children's `branch_base` should be `main` (or
+     another fresh base), **not** your abandoned branch — nothing
+     depends on it.
+   - Skip to step 9 with no `--branch` and a `--summary` like
+     `"abandoned partial work; decomposed instead — <one-line
+     reason>"`. No merge task synthesizes.
 
-6. **Run local tests if a test runner is configured.** If they fail,
-   try once to diagnose and fix. If you still can't make them pass:
-   commit + push what you have, then `task_complete` with that SHA as
-   `result_branch` plus a follow-up child scoped narrowly to fixing
-   the failing test.
+6. **Run any tests the task spec asks for.** The skill itself does not
+   know what test runner this project uses. If `spec.prompt` describes
+   tests to run, run them as described and self-fix once on failure;
+   if you still can't make them pass, commit + push what you have,
+   then `tm complete` with that SHA as `--branch` plus a follow-up
+   child scoped narrowly to fixing the failing test (`type:
+   "implement"`, `requires: [$TASK_ID]`, `branch_base: "main"`).
 
-   ```bash
-   if [ -f pyproject.toml ] || [ -f requirements.txt ] || [ -d tests ]; then
-       if ! pytest -q; then
-           # One self-fix attempt has already happened (or skip it
-           # for trivial test names). Hand off the rest.
-           FAILING=$(pytest -q 2>&1 | grep -E '^FAILED' | head -3 | tr '\n' '; ')
-           git add -A
-           git -c user.email="$AGENT_ID@swarm.local" -c user.name="$AGENT_ID" \
-               commit --allow-empty -m "WIP $TITLE (tests not yet passing)" || true
-           git push origin "task/$TASK_ID"
-           PROGRESS_SHA=$(git rev-parse HEAD)
-           NEW_CHILDREN_JSON=$(jq -n --arg this "$TASK_ID" --arg failing "$FAILING" \
-               '[{
-                 type: "implement",
-                 title: ("fix failing tests on " + $this),
-                 prompt: ("On branch task/" + $this + ", fix failing tests: " + $failing),
-                 branch_base: "main",
-                 requires: [$this]
-               }]')
-           tm /task_complete "$(jq -n \
-               --arg aid "$AGENT_ID" --argjson s $((RANDOM*RANDOM)) \
-               --arg id "$TASK_ID" --argjson tok "$TOK" \
-               --arg sum "tests not passing: $FAILING; handing off fix" \
-               --arg br "$PROGRESS_SHA" \
-               --argjson kids "$NEW_CHILDREN_JSON" \
-               '{agent_id:$aid,serial:$s,id:$id,token:$tok,
-                 result_summary:$sum,result_branch:$br,new_children:$kids}')"
-           cd "$HOME"
-           return 0
-       fi
-   fi
-   ```
+   If the task spec does not mention tests, skip this step.
 
 7. **Write your handoff file.** Each task writes to a uniquely-named
    file under `handoff/` so concurrent siblings don't collide on merge.
@@ -270,27 +254,27 @@ would unblock the goal, hand it off via `task_complete`'s
 
 9. **Optionally create follow-up tasks.** If you discovered work that
    should be a new task (a separate test scaffold, a follow-on cleanup,
-   etc.), build it as a `new_children` entry. Otherwise:
+   etc.), write the JSON array to a file. Otherwise, skip the
+   `--children-file` flag entirely.
 
-   ```bash
-   NEW_CHILDREN_JSON='[]'
-   ```
-
-10. **Call `task_complete`.** When you have a real branch to ship,
-    pass `--arg br "$SHA"`. When you're handing off without a branch
+10. **Call `tm complete`.** When you have a real branch to ship, pass
+    `--branch "$SHA"`. When you're handing off without a branch
     (scope-too-large, mid-flight pivot, API-mismatch with no
-    salvageable work), pass `--arg br ""` — the SM will not synthesize
-    a merge task in that case.
+    salvageable work), omit `--branch` — the SM will not synthesize a
+    merge task in that case.
 
     ```bash
-    tm /task_complete "$(jq -n \
-        --arg aid "$AGENT_ID" --argjson s $((RANDOM*RANDOM)) \
-        --arg id "$TASK_ID" --argjson tok "$TOK" \
-        --arg sum "Shipped $TITLE on branch task/$TASK_ID @ $SHA." \
-        --arg br  "$SHA" \
-        --argjson kids "$NEW_CHILDREN_JSON" \
-        '{agent_id:$aid,serial:$s,id:$id,token:$tok,
-          result_summary:$sum,result_branch:$br,new_children:$kids}')"
+    tm complete --id "$TASK_ID" --token "$TOK" \
+        --branch "$SHA" \
+        --summary "Shipped $TITLE on branch task/$TASK_ID @ $SHA."
+    ```
+
+    Or with follow-up children:
+    ```bash
+    tm complete --id "$TASK_ID" --token "$TOK" \
+        --branch "$SHA" \
+        --summary "..." \
+        --children-file "$TMPDIR/children-$TASK_ID.json"
     ```
 
 11. **Return a one-line summary** to the parent — e.g.
@@ -299,8 +283,8 @@ would unblock the goal, hand it off via `task_complete`'s
 
 ## Handling `fenced`
 
-If at any point a `tm /task_*` call returns `"ok":false,"error":"fenced"`:
-- Stop. Don't push, don't commit, don't `task_fail`.
+If at any point a `tm ...` call returns `"ok":false,"error":"fenced"`:
+- Stop. Don't push, don't commit, don't `tm fail`.
 - `cd "$HOME"`. The worktree leaks; humans run `git worktree prune` in
   the clone to clean up later.
 - Return summary: `"FENCED: another agent took over $TASK_ID"`.
@@ -308,31 +292,30 @@ If at any point a `tm /task_*` call returns `"ok":false,"error":"fenced"`:
 `fenced` is not a failure of the goal — another agent has taken over
 this task. It's a different beast from "blocked" or "abandon."
 
-## `task_fail` (rare; halts the swarm)
+## `tm fail` (rare; halts the swarm)
 
-Call `task_fail` ONLY if the goal is genuinely unreachable: the
+Call `tm fail` ONLY if the goal is genuinely unreachable: the
 codebase is unsalvageable for this task, the prompt contradicts itself
 in a way no follow-up could resolve, or a hard environment constraint
 (no compiler, no required library, the assumed external service
 doesn't exist) blocks every path.
 
-**Calling `task_fail` halts the swarm.** The task manager will stop
+**Calling `tm fail` halts the swarm.** The task manager will stop
 handing out new tasks to any agent until a human investigates and
 calls `/swarm_resume`. Already-running peers finish what they're doing
 and will see `halted: true` on their next claim.
 
-**Almost every blocker has a hand-off path via `task_complete` with
-`new_children`. Use that.** Reach for `task_fail` only when no
+**Almost every blocker has a hand-off path via `tm complete
+--children-file`. Use that.** Reach for `tm fail` only when no
 follow-up could plausibly help. If you can write down the prompt for a
 follow-up task, this isn't a fail — it's a hand-off.
 
-The `reason` field MUST start with `ABANDON:` so humans grepping the
-log can find these.
+The `--reason` value MUST start with `ABANDON:` (the CLI refuses to
+send otherwise) so humans grepping the log can find these.
 
 ```bash
-REASON="ABANDON: <specific, concrete reason no follow-up can help>"
-tm /task_fail "$(jq -n --arg aid "$AGENT_ID" --argjson s $((RANDOM*RANDOM)) \
-    --arg id "$TASK_ID" --argjson tok "$TOK" --arg r "$REASON" \
-    '{agent_id:$aid,serial:$s,id:$id,token:$tok,reason:$r}')"
+tm fail --id "$TASK_ID" --token "$TOK" \
+    --reason "ABANDON: <specific, concrete reason no follow-up can help>"
 ```
+
 Return summary: `"ABANDONED implement $TASK_ID: <reason>"`.

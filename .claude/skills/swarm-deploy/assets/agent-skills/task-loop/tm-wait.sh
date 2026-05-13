@@ -1,21 +1,30 @@
 #!/bin/bash
-# Polls /task_claim every 10s; exits the moment a task is claimed
-# or the swarm halts. Stash the claim response JSON to $CLAIM_OUT.
+# Polls /task_claim every 10s via the unified `tm` CLI; exits the
+# moment a task is claimed or the swarm halts. Stashes the claim
+# response JSON to $CLAIM_OUT.
 #
 # Required env:
-#   TM_URL      task-manager base URL
-#   AGENT_ID    this agent's id
-#   CLAIM_OUT   path to write the claim response JSON
+#   TM_URL_LIST or TM_URL   (read by tm CLI)
+#   AGENT_ID                (read by tm CLI)
+#   CLAIM_OUT               path to write the claim response JSON
+#   SKILL_DIR               directory containing the tm CLI
 #
 # Output line on exit: "GOT_TASK" or "HALTED".
 set -u
-: "${TM_URL:?missing}" "${AGENT_ID:?missing}" "${CLAIM_OUT:?missing}"
+: "${AGENT_ID:?missing}" "${CLAIM_OUT:?missing}" "${SKILL_DIR:?missing}"
+
+# Pick a working python launcher (see tm-hb.sh for rationale).
+if command -v py >/dev/null 2>&1 && py -3 --version >/dev/null 2>&1; then
+    PY="py -3"
+elif command -v python3 >/dev/null 2>&1 && python3 --version >/dev/null 2>&1; then
+    PY="python3"
+else
+    echo "tm-wait: no python launcher (tried 'py -3' and 'python3')" >&2
+    exit 1
+fi
 
 while true; do
-    RESP=$(curl -fsSL -X POST "$TM_URL/task_claim" \
-        -H 'Content-Type: application/json' \
-        -d "$(jq -n --arg aid "$AGENT_ID" --argjson s $((RANDOM*RANDOM)) \
-              '{agent_id:$aid,serial:$s}')" 2>/dev/null) || { sleep 10; continue; }
+    RESP=$($PY "$SKILL_DIR/tm" claim 2>/dev/null) || { sleep 10; continue; }
     HALTED=$(echo "$RESP" | jq -r '.halted // false' 2>/dev/null)
     if [ "$HALTED" = "true" ]; then
         echo "$RESP" > "$CLAIM_OUT"

@@ -19,31 +19,50 @@ Each Bash tool call spawns a fresh shell. **`export` inside one Bash
 call does NOT propagate to the next Bash call.** Vars from CLAUDE.md or
 your shell snapshot may or may not survive — treat them as untrusted.
 
-The rule: **every Bash tool call in this skill MUST start with the
-preamble below.** Copy it verbatim, fill in the agent-specific values
-from CLAUDE.md, and put it before any other shell logic. No exceptions.
+The rule: **every Bash tool call in this skill MUST start by sourcing
+the agent's `tm.env`.** That one line re-establishes `TM_URL_LIST`,
+`AGENT_ID`, `TM_REPO`, `TM_WORK`, `TMPDIR`, `SKILL_DIR`, `CLAIM_OUT`,
+`TM_ENV`, picks the right python launcher, and defines the `tm()` bash
+function. No exceptions.
 
 ```bash
 # === STANDARD PREAMBLE — paste at the top of every Bash tool call ===
-export TM_URL="http://localhost:8080"
-export AGENT_ID="<from CLAUDE.md>"
-export TM_REPO="<from CLAUDE.md>"
-export TM_WORK="<from CLAUDE.md>"
-export TMPDIR="$TM_WORK/tmp"
-export SKILL_DIR="$TM_WORK/.claude/skills/task-loop"
-export CLAIM_OUT="$TMPDIR/tm-claim-$AGENT_ID.json"
-mkdir -p "$TMPDIR"
-tm() { curl -fsSL -X POST "$TM_URL$1" -H 'Content-Type: application/json' -d "$2"; }
+source "<TM_WORK from CLAUDE.md>/tm.env"
 # === END PREAMBLE ===
 ```
+
+`<TM_WORK>` is the absolute path printed in your CLAUDE.md (e.g.
+`C:/.../agent-1`). After the `source`, `$TM_ENV` itself holds the
+absolute path to `tm.env`, so subsequent uses can write `source
+"$TM_ENV"` once it's set.
 
 `TASK_ID`, `TOK`, and `SPEC_JSON` are per-task — set them only inside
 the Bash calls that need them, after a successful claim. They never
 need to survive across calls (Step 4 hands them to the subagent via
 the `Agent` prompt).
 
-`AGENT_ID` must be unique among concurrent agents. `jq` and `curl` are
-required and assumed installed.
+`AGENT_ID` must be unique among concurrent agents. `python3` (or
+`py -3` on Windows), and `jq` are required and assumed installed.
+
+## Why a single CLI for everything
+
+All RPC against tm-server goes through the bundled `tm` Python CLI
+(`$SKILL_DIR/tm`). Never hand-roll `curl`. Two reasons:
+
+1. **Correctness.** The server reads the fencing token from the JSON
+   key `token`. A hand-rolled payload that uses `tok` (the env-var name)
+   silently sends `token=0` and gets fenced even when the agent is the
+   rightful owner. The CLI builds payloads correctly.
+2. **Replica failover.** `TM_URL_LIST` holds the three paxos replicas.
+   If the first replica is down or partitioned, the CLI transparently
+   retries the next on transport failure (connection refused, timeout,
+   5xx). Application-level errors (4xx, `ok:false` bodies) pass through
+   unchanged — retrying a 400 would mask payload bugs.
+
+`tm --help` lists the subcommands. The ones you'll use in this skill
+are `tm claim` and (implicitly, via `tm-hb.sh`) `tm hb-once`. Subagents
+use `tm complete`, `tm fail`, `tm create`, `tm list`, `tm dump`, `tm
+lock-acquire`, `tm lock-release`.
 
 ## The loop (high level)
 
@@ -62,10 +81,8 @@ You will repeat these steps forever:
 ## Step 1: foreground claim attempt
 
 ```bash
-# === STANDARD PREAMBLE === (paste verbatim, fill in values)
-SERIAL=$((RANDOM * RANDOM))
-RESP=$(tm /task_claim "$(jq -n --arg aid "$AGENT_ID" --argjson s "$SERIAL" \
-    '{agent_id:$aid,serial:$s}')")
+source "<TM_WORK>/tm.env"   source "<TM_WORK>/tm.env"   # === STANDARD PREAMBLE ===
+RESP=$(tm claim)
 echo "$RESP"
 NONE=$(echo "$RESP" | jq -r .none)
 HALTED=$(echo "$RESP" | jq -r '.halted // false')
@@ -99,26 +116,27 @@ burns tokens.
 
 The wait script `tm-wait.sh` is bundled at
 `$TM_WORK/.claude/skills/task-loop/tm-wait.sh`. It polls `/task_claim`
-server-side and exits the moment it gets a claim or the swarm halts.
+server-side (via the `tm` CLI, with replica failover) and exits the
+moment it gets a claim or the swarm halts.
 
 **Bash tool call with `run_in_background: true`** — paste the preamble
 plus the script invocation:
 
 ```bash
-# === STANDARD PREAMBLE ===
+source "<TM_WORK>/tm.env"   # === STANDARD PREAMBLE ===
 "$SKILL_DIR/tm-wait.sh"
 ```
 
-The script reads `TM_URL`, `AGENT_ID`, `CLAIM_OUT` from the env you
-just exported in the preamble. It writes the claim JSON to `$CLAIM_OUT`
-and exits with `GOT_TASK` or `HALTED`.
+The script reads `TM_URL_LIST`, `AGENT_ID`, `CLAIM_OUT`, `SKILL_DIR`
+from the env you just exported in the preamble. It writes the claim
+JSON to `$CLAIM_OUT` and exits with `GOT_TASK` or `HALTED`.
 
 Save the returned `bash_id` as `WAIT_BASH_ID`. Wait for the completion
 notification (you spend zero tokens during this wait). When notified,
 read the claim JSON in a NEW foreground Bash call:
 
 ```bash
-# === STANDARD PREAMBLE ===
+source "<TM_WORK>/tm.env"   # === STANDARD PREAMBLE ===
 RESP=$(cat "$CLAIM_OUT")
 echo "$RESP"
 HALTED=$(echo "$RESP" | jq -r '.halted // false')
@@ -149,15 +167,16 @@ inline TASK_ID/TOK substituted with the literal values you noted from
 Step 1 or Step 2's echo:
 
 ```bash
-# === STANDARD PREAMBLE ===
+source "<TM_WORK>/tm.env"   # === STANDARD PREAMBLE ===
 export TASK_ID="t/0001"      # <-- substitute the actual claimed id
 export TOK=3                 # <-- substitute the actual token
 "$SKILL_DIR/tm-hb.sh"
 ```
 
-The script reads `TM_URL`, `AGENT_ID`, `TASK_ID`, `TOK` from the env
-the preamble + these two lines just exported. It pings
-`/task_heartbeat` every 10s and runs until you `KillShell` it in Step 5.
+The script reads `TM_URL_LIST`, `AGENT_ID`, `TASK_ID`, `TOK`,
+`SKILL_DIR` from the env the preamble + these two lines just exported.
+It pings `/task_heartbeat` every 10s (via `tm hb-once`, with replica
+failover) and runs until you `KillShell` it in Step 5.
 
 Save the returned `bash_id` as `HB_BASH_ID`.
 
@@ -190,52 +209,72 @@ instructions directly.
 You are a subagent dispatched by the swarm task-loop. Complete one
 <TYPE> task and return a one-line summary.
 
-ENVIRONMENT — every Bash tool call you make MUST start with these
-exports (env does NOT propagate between Bash tool calls):
+ENVIRONMENT — every Bash tool call you make MUST start by sourcing the
+agent's tm.env (env does NOT propagate between Bash tool calls), then
+setting the three per-task vars:
 
-  export TM_URL="<TM_URL>"
-  export AGENT_ID="<AGENT_ID>"
-  export TM_REPO="<TM_REPO>"
-  export TM_WORK="<TM_WORK>"
-  export TMPDIR="$TM_WORK/tmp"
+  source "<TM_ENV>"
   export TASK_ID="<TASK_ID>"
   export TOK=<TOK>
   export SPEC_JSON='<SPEC_JSON>'
-  tm() { curl -fsSL -X POST "$TM_URL$1" -H 'Content-Type: application/json' -d "$2"; }
+
+The `source` line establishes TM_URL_LIST, TM_URL, AGENT_ID, TM_REPO,
+TM_WORK, TMPDIR, SKILL_DIR, CLAIM_OUT, TM_ENV, the python launcher (PY),
+and the `tm()` bash function. The three exports below it carry the
+per-task values from the parent's claim.
 
 The PARENT agent owns ALL background tm-* scripts (heartbeat, wait, any
 other long-running poll). A separate background shell is already pinging
 /task_heartbeat every 10s on your behalf. DO NOT launch any background
 script that talks to tm-server. DO NOT use Bash with run_in_background.
-DO NOT call KillShell. You only make foreground tm() calls (claim is
-already done, so you'll only call /task_complete or /task_fail).
+DO NOT call KillShell. You only make foreground tm() calls.
 
-When you finish, end with EXACTLY ONE call to /task_complete (the
-common case — including hand-offs via `new_children`) or, RARELY, to
-/task_fail (only if the goal is genuinely unreachable; this halts the
-swarm). Then return a one-line summary string to the parent.
+HARD RULE — all RPC against tm-server goes through the `tm` CLI:
+
+  tm complete --id "$TASK_ID" --token "$TOK" \
+              [--branch SHA] [--summary "..."] [--children-file path.json]
+  tm fail     --id "$TASK_ID" --token "$TOK" --reason "ABANDON: ..."
+  tm create   --spec-file path.json [--creator-task ID --creator-token N]
+  tm list     [--status STATUS] [--only-mine]
+  tm dump
+  tm lock-acquire  --merge-task "$TASK_ID" --merge-token "$TOK"
+  tm lock-release  --lock-token LOCKTOK
+
+DO NOT hand-roll curl against tm-server. The CLI owns:
+  - building the JSON payload with the correct field names (`token`,
+    NOT `tok` — a freelanced "tok" payload silently sends token=0 and
+    gets fenced even when the agent is the legitimate owner);
+  - replica failover on transport-level failure;
+  - 307 leader-redirect handling.
 
 Almost every blocker — merge conflicts, scope-too-large, tests that
 won't pass, predecessor API mismatches, lock contention — is a hand-off
-via /task_complete with new_children, NOT a /task_fail. If you can
-write down the prompt for a follow-up task, it's a hand-off.
+via `tm complete --children-file ...`, NOT `tm fail`. If you can write
+down the prompt for a follow-up task, it's a hand-off.
 
-/task_fail halts the entire swarm until a human runs /swarm_resume.
-Use it only for genuinely unreachable goals (contradictory prompt,
-missing environment, corrupt repo). Reason field MUST start with
-"ABANDON:" so humans grepping the log can find these.
+`tm fail` halts the entire swarm until a human runs /swarm_resume. Use
+it only for genuinely unreachable goals (contradictory prompt, missing
+environment, corrupt repo). The --reason MUST start with "ABANDON:" so
+humans grepping the log can find these. The CLI refuses to send if it
+doesn't.
 
-If any tm call returns "ok":false,"error":"fenced", STOP IMMEDIATELY.
-Do not push, commit, or call task_fail. Just return the summary
-"FENCED: another agent took over <TASK_ID>".
+If any tm call returns `"ok":false,"error":"fenced"`, STOP IMMEDIATELY.
+Do not push, commit, or call `tm fail`. Return the summary string
+"FENCED: another agent took over <TASK_ID>" so the parent can release
+the heartbeat and let another agent reclaim the task.
 
 ----- BEGIN SUBSKILL: <TYPE> -----
 <inlined content of the matching subskill file>
 ----- END SUBSKILL -----
 ```
 
-Substitute the env values in. For `<SPEC_JSON>`, single-quote the
-compact JSON; if it contains apostrophes, use jq to escape.
+Substitute three values in the dispatch prompt: `<TM_ENV>` (the
+absolute path to the agent's tm.env, e.g. `$TM_ENV` from your sourced
+preamble), `<TASK_ID>`, `<TOK>`, and `<SPEC_JSON>`. For `<SPEC_JSON>`,
+single-quote the compact JSON; if it contains apostrophes, use jq to
+escape. Everything else the subagent needs (TM_URL_LIST, AGENT_ID,
+TM_REPO, TM_WORK, SKILL_DIR, the python launcher, the `tm()` shim)
+comes from sourcing `tm.env`.
 
 The subagent runs in its own context and returns when done. Capture the
 returned summary string and print it:
@@ -248,12 +287,16 @@ returned summary string and print it:
 
 After the subagent returns:
 
-1. Call `KillShell` on `HB_BASH_ID`.
+1. Call `KillShell` on `HB_BASH_ID`. This MUST happen even if (especially
+   if) the subagent's summary starts with `FENCED:` — leaving the
+   heartbeat running on a fenced task keeps the lease alive on a token
+   that is no longer the owner, which prevents any other agent from
+   reclaiming the task. The lease MUST be allowed to expire.
 2. Optionally remove the stale claim file (the next claim's response
    is the only source of truth, but cleaning up keeps the dir tidy):
 
    ```bash
-   # === STANDARD PREAMBLE ===
+   source "<TM_WORK>/tm.env"   # === STANDARD PREAMBLE ===
    rm -f "$CLAIM_OUT"
    ```
 
@@ -262,7 +305,7 @@ After the subagent returns:
 **The very next Bash tool call after `KillShell HB_BASH_ID` MUST be
 the Step 1 foreground claim.** Do not read any file, do not consult
 any cached claim, do not "verify" anything — go straight to the next
-`/task_claim`.
+`tm claim`.
 
 The HTTP response is the **only** source of truth for what task
 you've claimed. `$CLAIM_OUT` (or any other file containing a prior
@@ -283,41 +326,46 @@ WAIT_BASH_ID` too.
    re-establish state. Skipping it makes `"$SKILL_DIR/..."` invocations
    resolve to `/...` (root) and fail with "No such file or directory".
 
-2. **The parent (you) owns ALL tm-* background scripts.** The subagent
+2. **All tm-server RPC goes through the `tm` CLI.** No hand-rolled
+   curl. The CLI owns field-name correctness and replica failover.
+   The bash `tm() { python3 "$SKILL_DIR/tm" "$@"; }` shim makes the
+   call sites read cleanly.
+
+3. **The parent (you) owns ALL tm-* background scripts.** The subagent
    never starts one and never calls KillShell. If a subagent thinks it
    needs to poll something — it doesn't. Only the parent runs background
-   curl loops.
+   loops.
 
-3. **Background scripts MUST be launched via separate Bash tool calls
+4. **Background scripts MUST be launched via separate Bash tool calls
    with `run_in_background: true`.** A `( ... ) &` inside one foreground
    Bash call dies when the tool returns.
 
-4. **Do not poll `/task_claim` from foreground Bash with `sleep`.** That
+5. **Do not poll `/task_claim` from foreground Bash with `sleep`.** That
    wastes tokens. Always use the backgrounded `tm-wait.sh` script.
 
-5. **KillShell the heartbeat after EVERY task** — every Step 5, no
+6. **KillShell the heartbeat after EVERY task** — every Step 5, no
    exceptions. Leaving it running between tasks ping-floods tm-server
    with stale-token heartbeats and clutters the decision log. The
    scripts do NOT self-terminate when Claude exits, so if you forget
    `KillShell` and then close Claude, the script keeps running until
    the human kills it manually.
 
-6. **Subagent returns a summary string, not a transcript.** Tell it so
+7. **Subagent returns a summary string, not a transcript.** Tell it so
    in the prompt — the parent's context only ingests one line per task.
 
-7. **The HTTP response from `/task_claim` is the only source of truth
+8. **The HTTP response from `/task_claim` is the only source of truth
    for what task you own.** Never read `$CLAIM_OUT` (or any other
    cached file containing a previous claim) after a task has finished.
    That file is written by `tm-wait.sh` purely as a vehicle for
    passing one claim from the background-wait into the foreground; it
    is stale the moment Step 4 begins. The mandatory transition out of
-   Step 5 is `KillShell HB_BASH_ID` → fresh foreground `/task_claim`,
+   Step 5 is `KillShell HB_BASH_ID` → fresh foreground `tm claim`,
    no intermediate steps.
 
 ## Lease expiry & token bumps
 
 The SM expires a task's claim if `now_unix > heartbeat_unix +
-lease_duration`. When that happens, the next `/task_claim` finds the
+lease_duration`. When that happens, the next `tm claim` finds the
 task back in the pending pool and re-hands it out — **with a fresh
 `owner_token`**. Any in-flight `/task_heartbeat`, `/task_complete`, or
 `/task_fail` stamped with the old token will be rejected as
@@ -325,11 +373,11 @@ task back in the pending pool and re-hands it out — **with a fresh
 
 Symptoms you might see:
 
-- A `/task_claim` response for a task you thought you were already
+- A `tm claim` response for a task you thought you were already
   working on, with a `token` higher than the one you held.
-- A `/task_heartbeat` returning `"error":"fenced"` (the lease
-  expired in the gap before your heartbeat fired, and another claim
-  already minted token N+1 — possibly your own next claim).
+- A `tm hb-once` returning `"error":"fenced"` (the lease expired in
+  the gap before your heartbeat fired, and another claim already minted
+  token N+1 — possibly your own next claim).
 
 How to avoid it:
 
@@ -348,7 +396,7 @@ How to avoid it:
 ## Handling fenced responses (parent side)
 
 If you ever observe `"ok": false, "error": "fenced"` in any tm call you
-make at the parent level (rare — the parent only calls /task_claim and
+make at the parent level (rare — the parent only calls `tm claim` and
 KillShell), kill the heartbeat and loop. The subagent handles fencing
 inside its own context.
 

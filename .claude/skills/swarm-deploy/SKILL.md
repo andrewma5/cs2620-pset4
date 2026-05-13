@@ -42,14 +42,20 @@ cp "$PSET4/task-planning.md"     "$BUNDLE/task-planning/SKILL.md"
 cp "$PSET4/task-merging.md"      "$BUNDLE/task-merging/SKILL.md"
 ```
 
-Do **not** copy the helper scripts (`tm-wait.sh`, `tm-hb.sh`); those
-live only in the bundle (`assets/agent-skills/task-loop/`).
+Do **not** copy the helper scripts (`tm-wait.sh`, `tm-hb.sh`, `tm`);
+those live only in the bundle (`assets/agent-skills/task-loop/`).
 
 ## Step 3: Run the deploy script
 
 ```bash
-py -3 <skill-dir>/scripts/deploy.py <TARGET> --agents <N> [--force]
+py -3 <skill-dir>/scripts/deploy.py <TARGET> --agents <N> [--force] \
+      [--tm-urls http://host1:port,http://host2:port,...]
 ```
+
+`--tm-urls` defaults to the docker-compose 3-replica layout
+(`http://localhost:8081,http://localhost:8082,http://localhost:8083`).
+Pass a single URL for single-replica testing
+(e.g. `--tm-urls http://localhost:8080`).
 
 (`<skill-dir>` is the directory containing this `SKILL.md`. On Windows
 the python launcher is `py -3`; on macOS/Linux use `python3`.)
@@ -63,7 +69,8 @@ The script:
   commit on `main` (so agent branches off `main` work immediately);
 - creates `<TARGET>/agent-1`, `agent-2`, ..., `agent-N`;
 - in each agent folder writes:
-  - `CLAUDE.md` with `TM_URL`, `AGENT_ID`, `TM_REPO`, `TM_WORK` filled in;
+  - `CLAUDE.md` with `TM_URL_LIST` (and `TM_URL` for legacy paths),
+    `AGENT_ID`, `TM_REPO`, `TM_WORK` filled in;
   - `.claude/skills/task-loop/SKILL.md`,
     `.claude/skills/task-planning/SKILL.md`,
     `.claude/skills/task-implementing/SKILL.md`,
