@@ -97,6 +97,13 @@ cot::task<paxos_message> tcp_transport::receive() {
     co_return msg;
 }
 
+// Long enough to absorb a normal slow write under load, short enough to
+// keep run() responsive (election timeout 500ms, retransmit cadence 100ms).
+// See docs/BUGS.md "OPEN — Killing the elected leader wedges write quorum"
+// for the failure mode this guards against: without a timeout, cot::write
+// suspends forever on a full kernel send buffer to a dead peer in CLOSE-WAIT.
+constexpr auto PEER_SEND_TIMEOUT = 500ms;
+
 cot::task<> tcp_transport::send(size_t peer, paxos_message msg) {
     if (peer >= peer_addrs_.size() || peer == my_index_) co_return;
     if (!outbound_fds_[peer].valid()) co_return;  // not connected yet
@@ -104,13 +111,19 @@ cot::task<> tcp_transport::send(size_t peer, paxos_message msg) {
     std::string body = to_json(msg).dump();
     uint32_t len_be = htonl(static_cast<uint32_t>(body.size()));
 
-    auto w1 = co_await cot::write(outbound_fds_[peer], &len_be, sizeof(len_be));
-    if (!w1) {
-        outbound_fds_[peer].close();
+    auto r1 = co_await cot::first(
+        cot::write(outbound_fds_[peer], &len_be, sizeof(len_be)),
+        cot::after(PEER_SEND_TIMEOUT)
+    );
+    if (r1.index() == 1 || !std::get<0>(r1)) {
+        outbound_fds_[peer].close();   // wakes connect_loop_ via cot::closed
         co_return;
     }
-    auto w2 = co_await cot::write(outbound_fds_[peer], body.data(), body.size());
-    if (!w2) {
+    auto r2 = co_await cot::first(
+        cot::write(outbound_fds_[peer], body.data(), body.size()),
+        cot::after(PEER_SEND_TIMEOUT)
+    );
+    if (r2.index() == 1 || !std::get<0>(r2)) {
         outbound_fds_[peer].close();
     }
 }
@@ -125,20 +138,36 @@ cot::task<> tcp_transport::listen_loop_() {
     }
 }
 
+// Persistent reconnect loop. After a successful connect, parks on
+// cot::closed(outbound_fds_[peer]) — fires when send() closes the fd on
+// write timeout/error, or when the peer's container drops the connection.
+// Then loops back to reconnect. See docs/BUGS.md for the dead-peer-wedge
+// failure mode this avoids.
 cot::task<> tcp_transport::connect_loop_(size_t peer) {
     while (true) {
-        try {
-            auto conn = co_await cot::tcp_connect(peer_addrs_[peer]);
-            if (conn.valid()) {
-                outbound_fds_[peer] = std::move(conn);
-                co_return;
+        if (!outbound_fds_[peer].valid()) {
+            try {
+                auto conn = co_await cot::tcp_connect(peer_addrs_[peer]);
+                if (conn.valid()) {
+                    outbound_fds_[peer] = std::move(conn);
+                }
+            } catch (...) {
+                // peer not up yet — back off and retry
             }
-        } catch (...) {
-            // peer not up yet — back off and retry
         }
-        // 100ms retry — faster than the 500ms election timeout so replicas
-        // can establish all-to-all connectivity before the first election.
-        co_await cot::after(100ms);
+
+        if (outbound_fds_[peer].valid()) {
+            // Wait for this fd to close (either send() timed out and
+            // closed it, or the peer dropped the connection). When fired,
+            // loop back and re-establish.
+            co_await cot::closed(outbound_fds_[peer]).arm();
+            outbound_fds_[peer] = cot::fd{};   // drop refcount on closed fd
+        } else {
+            // 100ms backoff on connect failure — faster than the 500ms
+            // election timeout so replicas can re-establish all-to-all
+            // connectivity before the next election round.
+            co_await cot::after(100ms);
+        }
     }
 }
 

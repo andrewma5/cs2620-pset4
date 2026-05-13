@@ -1,0 +1,111 @@
+{
+  "halted_by": "",
+  "halted_reason": "",
+  "main_lock": {
+    "holder_agent": "",
+    "holder_merge_task": "",
+    "lock_token": 0
+  },
+  "swarm_halted": false,
+  "tasks": [
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778710187,
+      "id": "t/0001",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "",
+      "result_summary": "Decomposed 'Build a CLI calculator' into 2 implement tasks.",
+      "spec": {
+        "depth": 0,
+        "prompt": "Build a Python CLI calculator. Decompose into two implement tasks: (1) calc/ops.py with add/sub/mul/div pure functions and tests in tests/test_ops.py; (2) calc/repl.py providing a REPL that uses calc.ops, with tests in tests/test_repl.py covering one happy-path interaction. branch_base for both is main. The calculator must run end-to-end: `python -m calc.repl` should accept input lines like '1 + 2' and print results.",
+        "requires": [],
+        "title": "Build a CLI calculator",
+        "type": "plan"
+      },
+      "status": "done"
+    },
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778710257,
+      "id": "t/0002",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "321a6d9010a88bf628178ff11f572fced2a1da6b",
+      "result_summary": "Shipped calc/ops.py arithmetic functions and tests on branch task/t/0002 @ 321a6d9010a88bf628178ff11f572fced2a1da6b.",
+      "spec": {
+        "branch_base": "main",
+        "depth": 1,
+        "parent_id": "t/0001",
+        "prompt": "Implement add, subtract, multiply, divide as pure functions in calc/ops.py. Add a calc/__init__.py so the package is importable. Write unit tests in tests/test_ops.py covering normal inputs and division-by-zero. branch_base: main. The module should be importable as `from calc.ops import add, sub, mul, div`.",
+        "requires": [],
+        "title": "calc/ops.py — arithmetic functions and tests",
+        "type": "implement"
+      },
+      "status": "done"
+    },
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778710445,
+      "id": "t/0003",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "0e5f9aebabd06dde3b6548734f719ce84b8f7154",
+      "result_summary": "Shipped calc/repl.py REPL and tests on branch task/t/0003 @ 0e5f9aebabd06dde3b6548734f719ce84b8f7154.",
+      "spec": {
+        "branch_base": "main",
+        "depth": 1,
+        "parent_id": "t/0001",
+        "prompt": "Implement a REPL in calc/repl.py that reads lines from stdin in the format 'NUM OP NUM' (e.g. '1 + 2') and prints results. Support operators +, -, *, /. Expose a __main__ entry point so `python -m calc.repl` works. Write tests in tests/test_repl.py covering at least one happy-path interaction (e.g. '1 + 2' → '3'). Import arithmetic from calc.ops. branch_base: main.",
+        "requires": [],
+        "title": "calc/repl.py — REPL loop and tests",
+        "type": "implement"
+      },
+      "status": "done"
+    },
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778710334,
+      "id": "t/0004",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "321a6d9010a88bf628178ff11f572fced2a1da6b",
+      "result_summary": "Merged 321a6d9010a88bf628178ff11f572fced2a1da6b into main; new HEAD 321a6d9010a88bf628178ff11f572fced2a1da6b.",
+      "spec": {
+        "branch_base": "main",
+        "depth": 1,
+        "implement_branch_sha": "321a6d9010a88bf628178ff11f572fced2a1da6b",
+        "parent_id": "t/0002",
+        "prompt": "",
+        "requires": [
+          "t/0002"
+        ],
+        "title": "merge t/0002",
+        "type": "merge"
+      },
+      "status": "done"
+    },
+    {
+      "fail_reason": "",
+      "heartbeat_unix": 1778710502,
+      "id": "t/0005",
+      "owner_agent": "",
+      "owner_token": 0,
+      "result_branch": "0e5f9aebabd06dde3b6548734f719ce84b8f7154",
+      "result_summary": "Merged 0e5f9aebabd06dde3b6548734f719ce84b8f7154 into main; new HEAD 0e5f9aebabd06dde3b6548734f719ce84b8f7154.",
+      "spec": {
+        "branch_base": "main",
+        "depth": 1,
+        "implement_branch_sha": "0e5f9aebabd06dde3b6548734f719ce84b8f7154",
+        "parent_id": "t/0003",
+        "prompt": "",
+        "requires": [
+          "t/0003"
+        ],
+        "title": "merge t/0003",
+        "type": "merge"
+      },
+      "status": "done"
+    }
+  ]
+}

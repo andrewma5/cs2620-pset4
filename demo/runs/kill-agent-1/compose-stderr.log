@@ -1,0 +1,9 @@
+replica-2-1  | tm-server: decision log -> logs/tm-2.log (truncate)
+replica-2-1  | tm-server: paxos = multi-replica TCP (replica 2 of 3, peers=replica-2:9000)
+replica-2-1  | tm-server listening on 0.0.0.0:8080
+replica-1-1  | tm-server: decision log -> logs/tm-1.log (truncate)
+replica-1-1  | tm-server: paxos = multi-replica TCP (replica 1 of 3, peers=replica-1:9000)
+replica-1-1  | tm-server listening on 0.0.0.0:8080
+replica-0-1  | tm-server: decision log -> logs/tm-0.log (truncate)
+replica-0-1  | tm-server: paxos = multi-replica TCP (replica 0 of 3, peers=replica-0:9000)
+replica-0-1  | tm-server listening on 0.0.0.0:8080

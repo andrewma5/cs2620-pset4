@@ -4,10 +4,12 @@ Usage:
   python3 gantt_tm.py --snapshots logs/snapshots-0.json --out demo/run-1/gantt.png
 
 Each task gets one row:
-  - light grey segment = queue time (created -> claimed)
-  - colored segment    = work time   (claimed -> completed), color = owner_agent
+  - light grey segment = queue time (created -> first claim)
+  - colored segments    = work episodes (one per owner_agent — handoffs
+                         from lease-expiry / re-claim render as adjacent
+                         differently-colored bars)
 
-Optional vertical injection markers for failure-injection runs (#2 / #3):
+Optional vertical injection markers for failure-injection runs:
   --annotate-at 12.5 --annotate-label "demo-pause-1"
   --annotate-at 22.5 --annotate-label "demo-resume-1"
 """
@@ -17,8 +19,17 @@ import os
 
 
 def parse_timeline(snapshots):
-    """Return id -> {id, type, title, created_at, claimed_at, completed_at, owner_agent}."""
+    """Return id -> {id, type, title, created_at, episodes:[...], completed_at}.
+
+    `episodes` is a list of (start, end, owner_agent) tuples. A task with no
+    handoff has exactly one episode. A task re-claimed after lease expiry has
+    two or more.
+    """
     tasks = {}
+    # Per-task: track last-seen owner_agent so we detect changes.
+    last_owner = {}
+    open_episode_start = {}
+
     for s in snapshots:
         now = s["now_unix"]
         for t in s["state"]["tasks"]:
@@ -29,16 +40,36 @@ def parse_timeline(snapshots):
                     "type": t["spec"]["type"],
                     "title": t["spec"]["title"],
                     "created_at": now,
-                    "claimed_at": None,
+                    "episodes": [],
                     "completed_at": None,
-                    "owner_agent": None,
                 }
+                last_owner[tid] = ""
+                open_episode_start[tid] = None
             entry = tasks[tid]
-            if t["status"] == "in_progress" and entry["claimed_at"] is None:
-                entry["claimed_at"] = now
-                entry["owner_agent"] = t["owner_agent"] or "(unknown)"
+            cur_owner = t["owner_agent"] or ""
+
+            # Owner-change transitions: close prior episode, open new.
+            if cur_owner != last_owner[tid]:
+                if open_episode_start[tid] is not None:
+                    # Close prior episode at this snapshot's time.
+                    entry["episodes"].append(
+                        (open_episode_start[tid], now, last_owner[tid])
+                    )
+                    open_episode_start[tid] = None
+                if cur_owner != "":
+                    # New owner — start an episode.
+                    open_episode_start[tid] = now
+                last_owner[tid] = cur_owner
+
             if t["status"] == "done" and entry["completed_at"] is None:
                 entry["completed_at"] = now
+                # If there's still an open episode, close it at completion.
+                if open_episode_start[tid] is not None:
+                    entry["episodes"].append(
+                        (open_episode_start[tid], now, last_owner[tid])
+                    )
+                    open_episode_start[tid] = None
+
     return tasks
 
 
@@ -69,7 +100,8 @@ def main():
     import matplotlib.pyplot as plt
     from matplotlib.patches import Patch
 
-    agents = sorted({t["owner_agent"] for t in tasks.values() if t["owner_agent"]})
+    # Collect all distinct agents across all episodes (handles re-claims).
+    agents = sorted({ep[2] for t in tasks.values() for ep in t["episodes"] if ep[2]})
     cmap = plt.get_cmap("tab10")
     agent_color = {a: cmap(i % 10) for i, a in enumerate(agents)}
 
@@ -80,19 +112,22 @@ def main():
     ax.invert_yaxis()
 
     for i, t in enumerate(rows):
-        # queue: created -> claimed (light grey)
-        if t["claimed_at"] is not None:
-            qs = t["created_at"] - t0
-            qe = t["claimed_at"] - t0
-            if qe > qs:
-                ax.barh(i, qe - qs, left=qs, height=0.55,
-                        color="#dddddd", edgecolor="none", zorder=2)
+        if not t["episodes"]:
+            continue
+        first_claim = t["episodes"][0][0]
 
-        # work: claimed -> completed (agent-colored)
-        if t["claimed_at"] is not None:
-            ws = t["claimed_at"] - t0
-            we = (t["completed_at"] if t["completed_at"] is not None else t_end) - t0
-            color = agent_color.get(t["owner_agent"], "#666666")
+        # queue: created -> first claim (light grey)
+        qs = t["created_at"] - t0
+        qe = first_claim - t0
+        if qe > qs:
+            ax.barh(i, qe - qs, left=qs, height=0.55,
+                    color="#dddddd", edgecolor="none", zorder=2)
+
+        # one bar per ownership episode (handoffs visible as color change)
+        for ep_start, ep_end, owner in t["episodes"]:
+            ws = ep_start - t0
+            we = ep_end - t0
+            color = agent_color.get(owner, "#666666")
             ax.barh(i, max(we - ws, 0.3), left=ws, height=0.55,
                     color=color, edgecolor="black", linewidth=0.6, zorder=3)
 

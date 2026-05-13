@@ -81,8 +81,11 @@ check_logs() {
 }
 
 # Wait until replica-1's log catches up to replica-0 (or timeout).
+# Default raised from 15s → 30s after Fix D (tcp_transport reconnect on
+# write-timeout): under recovery scenarios, the close-reconnect churn
+# sometimes pushes the last-slot catch-up past 15s. See docs/BUGS.md.
 wait_for_catchup() {
-    local timeout="${1:-15}"
+    local timeout="${1:-30}"
     for _ in $(seq 1 "$timeout"); do
         local n0 n1
         n0=$(wc -l < logs/tm-0.log 2>/dev/null || echo 0)
@@ -126,7 +129,7 @@ iter_pause_resume() {
     sleep 5
     make -C demo demo-resume-1 >/dev/null 2>&1 || { kill "$synth" 2>/dev/null; return 1; }
     wait "$synth"
-    wait_for_catchup 15 || return 1
+    wait_for_catchup 30 || return 1
     check_strict 8081 8082 8083 || return 1
     check_logs 0 1 2 || return 1
     return 0
@@ -163,7 +166,7 @@ iter_partition_reconnect() {
     sleep 5
     make -C demo demo-reconnect-1 >/dev/null 2>&1 || { kill "$synth" 2>/dev/null; return 1; }
     wait "$synth"
-    wait_for_catchup 15 || return 1
+    wait_for_catchup 30 || return 1
     check_strict 8081 8082 8083 || return 1
     check_logs 0 1 2 || return 1
     return 0
@@ -190,6 +193,21 @@ cmd_sweep() {
                     tail -10 /tmp/sweep-synth.out 2>/dev/null | sed 's/^/      /'
                     echo "    --- log line counts ---"
                     wc -l logs/tm-*.log 2>/dev/null | sed 's/^/      /'
+
+                    # Forensic capture: save compose stderr (paxos events) +
+                    # live /dump from each replica + last few lines of each
+                    # decision log. Lets us see post-failure WHY replica-1 is
+                    # behind (election rounds, applied_slot, etc).
+                    local fdir
+                    fdir="demo/sweep-failures/${scenario}-iter${i}-$(date +%s)"
+                    mkdir -p "$fdir"
+                    docker compose logs --no-color > "$fdir/compose-stderr.log" 2>&1 || true
+                    for p in 8081 8082 8083; do
+                        curl -s --max-time 3 "http://localhost:$p/dump" \
+                            > "$fdir/dump-port-$p.json" 2>/dev/null || true
+                    done
+                    cp logs/tm-0.log logs/tm-1.log logs/tm-2.log "$fdir/" 2>/dev/null || true
+                    echo "    --- forensics captured to $fdir ---"
                 fi
             fi
             printf "  [%s] %d/%d (pass=%d fail=%d)\r" "$scenario" "$i" "$iters" "$pass" "$fail"

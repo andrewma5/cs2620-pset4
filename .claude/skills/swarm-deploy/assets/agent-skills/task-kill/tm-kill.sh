@@ -39,24 +39,40 @@ escape_re() { printf '%s' "$1" | sed -e 's/[.[\*^$()+?{|]/\\&/g' -e 's,/,\\/,g';
 AGENT_RE="$(escape_re "$AGENT_ID")"
 TASK_RE="$(escape_re "$TASK_ID")"
 
+# pkill -f matches against the entire command-line string. Two observed
+# wrapper formats produce different argv strings:
+#   (a) eval wrapper (Claude Code Bash tool):
+#       /bin/zsh -c source <snapshot>... && eval 'source "<dir>/agent-N/tm.env"\012
+#           export TASK_ID="..."\012... "$SKILL_DIR/tm-hb.sh"'
+#   (b) direct bash invocation (the actual tm-hb.sh process):
+#       /bin/bash /<dir>/agent-N/.claude/skills/task-loop/tm-hb.sh
+# Both contain agent-N before tm-hb.sh in argv. We just need a regex
+# that matches "agent_id appears, then tm-hb/tm-wait .sh appears" —
+# no need to anchor on tm.env (only present in form (a)).
+# History: earlier this script anchored on tm-hb.sh FIRST then agent-id;
+# wrong order, never matched either form. Then we tried anchoring on
+# agent/tm.env which only matched form (a). See docs/BUGS.md.
+
 case "$MODE" in
     by-task)
         if [ -z "$TASK_ID" ]; then
             echo "tm-kill.sh: by-task mode requires --task-id" >&2
             exit 2
         fi
-        # pkill -f matches against the full argv string.
-        pkill -f "tm-hb\\.sh.*${AGENT_RE}.*TASK_ID=\"${TASK_RE}\"" || true
+        # by-task can't reliably filter form (b) by TASK_ID (not in argv).
+        # Fall back to killing all tm-hb for this agent — equivalent in
+        # practice since each agent has at most one active task at a time.
+        pkill -f "${AGENT_RE}.*tm-hb\\.sh" || true
         echo "killed (by-task $TASK_ID / $AGENT_ID)"
         ;;
     all-for-agent)
-        pkill -f "(tm-hb|tm-wait)\\.sh.*${AGENT_RE}" || true
+        pkill -f "${AGENT_RE}.*(tm-hb|tm-wait)\\.sh" || true
         echo "killed (all-for-agent $AGENT_ID)"
         ;;
     verify)
-        if pgrep -fa "(tm-hb|tm-wait)\\.sh.*${AGENT_RE}" >/dev/null 2>&1; then
+        if pgrep -fa "${AGENT_RE}.*(tm-hb|tm-wait)\\.sh" >/dev/null 2>&1; then
             echo "RESIDUAL: tm-* shells for $AGENT_ID still alive:"
-            pgrep -fa "(tm-hb|tm-wait)\\.sh.*${AGENT_RE}"
+            pgrep -fa "${AGENT_RE}.*(tm-hb|tm-wait)\\.sh"
             exit 1
         else
             echo "verified clean: no tm-* shells for $AGENT_ID"
