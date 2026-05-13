@@ -1,6 +1,6 @@
 ---
 name: swarm-deploy
-description: Deploy a tm-server agent-swarm test instance — creates a target directory containing a bare git repo and N agent workspaces, each preloaded with the task-loop / task-planning / task-implementing / task-merging skills and a CLAUDE.md wired to the right env vars. Use when the user asks to "deploy a swarm", "set up a test swarm", "spin up agent folders for tm-server", or otherwise prepares a new pset4 swarm test ground. Default agent count is 3.
+description: Deploy a tm-server agent-swarm test instance — creates a target directory containing a bare git repo and N agent workspaces, each preloaded with the task-loop / task-planning / task-implementing / task-merging / task-kill / task-shutdown skills and a CLAUDE.md wired to the right env vars. Use when the user asks to "deploy a swarm", "set up a test swarm", "spin up agent folders for tm-server", or otherwise prepares a new pset4 swarm test ground. Default agent count is 3.
 ---
 
 # swarm-deploy
@@ -9,9 +9,10 @@ description: Deploy a tm-server agent-swarm test instance — creates a target d
 
 This skill scaffolds a fresh swarm-test directory: one bare git repo
 shared by all agents, plus one folder per agent populated with a
-`CLAUDE.md`, the four `.claude/skills/*.md` files the agents need
-(`task-loop`, `task-planning`, `task-implementing`, `task-merging`), and
-a `.claude/settings.json` pinning the agent's default model to Sonnet.
+`CLAUDE.md`, the six `.claude/skills/*.md` files the agents need
+(`task-loop`, `task-planning`, `task-implementing`, `task-merging`,
+`task-kill`, `task-shutdown`), and a `.claude/settings.json` pinning
+the agent's default model to Sonnet.
 
 The actual `tm-server` binary, demo seed task, and `claude` CLI launches
 are NOT this skill's job — see `pset4/README.md` and `pset4/demo/Makefile`
@@ -40,10 +41,13 @@ cp "$PSET4/task-loop.md"         "$BUNDLE/task-loop/SKILL.md"
 cp "$PSET4/task-implementing.md" "$BUNDLE/task-implementing/SKILL.md"
 cp "$PSET4/task-planning.md"     "$BUNDLE/task-planning/SKILL.md"
 cp "$PSET4/task-merging.md"      "$BUNDLE/task-merging/SKILL.md"
+cp "$PSET4/task-kill.md"         "$BUNDLE/task-kill/SKILL.md"
+cp "$PSET4/task-shutdown.md"     "$BUNDLE/task-shutdown/SKILL.md"
 ```
 
-Do **not** copy the helper scripts (`tm-wait.sh`, `tm-hb.sh`, `tm`);
-those live only in the bundle (`assets/agent-skills/task-loop/`).
+Do **not** copy the helper scripts (`tm-wait.sh`, `tm-hb.sh`, `tm`,
+`tm-kill.ps1`, `tm-kill.sh`); those live only in the bundle
+(`assets/agent-skills/task-loop/` and `assets/agent-skills/task-kill/`).
 
 ## Step 3: Run the deploy script
 
@@ -74,7 +78,10 @@ The script:
   - `.claude/skills/task-loop/SKILL.md`,
     `.claude/skills/task-planning/SKILL.md`,
     `.claude/skills/task-implementing/SKILL.md`,
-    `.claude/skills/task-merging/SKILL.md` (copies of the canonical
+    `.claude/skills/task-merging/SKILL.md`,
+    `.claude/skills/task-kill/SKILL.md` (+ `tm-kill.ps1` and
+    `tm-kill.sh` helper scripts in the same folder),
+    `.claude/skills/task-shutdown/SKILL.md` (copies of the canonical
     skill folders bundled with this skill in `assets/agent-skills/`);
   - `.claude/settings.json` with `{"model": "sonnet"}`.
 - prints a JSON summary and the next-step commands.
@@ -119,25 +126,32 @@ After deploy succeeds, the user still needs to:
   left alone.
 - **Agents can't reach `tm-server`** — check `TM_URL` in the agent's
   `CLAUDE.md` matches the port `tm-server` is bound to.
-- **Orphaned `tm-hb.sh` / `tm-wait.sh` after closing an agent** — if a
-  human interrupts a Claude agent mid-task (Ctrl-C, terminal close,
-  `/exit` while the subagent is still working), the background bash
-  launched via `run_in_background: true` can outlive Claude on Windows
-  / Git Bash even though it has a tracked `bash_id`. The skill text is
-  honest about this: invariant #4 in `task-loop/SKILL.md` notes the
-  scripts do NOT self-reap. After ending a swarm run, sweep for
-  stragglers:
+- **Orphaned `tm-hb.sh` / `tm-wait.sh` after closing an agent** — if
+  Claude is still alive in the session, invoke `/task-shutdown` from
+  inside that agent's Claude window. It calls the `task-kill` helper,
+  which uses `Get-WmiObject Win32_Process` + `Stop-Process -Force` on
+  Windows (or `pkill -f` on POSIX) to actually reap the OS process.
+
+  **Do not rely on `KillShell` / `TaskStop` / `/bashes → X`** to kill
+  these shells — on Windows they report success while the underlying
+  bash subtree keeps running (anthropics/claude-code#8865). See
+  `assets/agent-skills/task-kill/SKILL.md` for the full failure-mode
+  write-up.
+
+  If Claude is no longer attached (you closed it / the session
+  crashed), run the `task-kill` helper directly from any PowerShell
+  window — no Claude needed:
 
   ```powershell
-  # PowerShell: list any tm-* leftovers
-  Get-CimInstance Win32_Process |
-      Where-Object { $_.CommandLine -match 'tm-hb|tm-wait|task_heartbeat|task_claim' } |
-      Select-Object ProcessId, CommandLine
-
-  # Then kill what remains:
-  Get-CimInstance Win32_Process |
-      Where-Object { $_.CommandLine -match 'tm-hb|tm-wait' } |
-      ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+  & "<TARGET>\agent-N\.claude\skills\task-kill\tm-kill.ps1" `
+      -Mode all-for-agent -AgentId "agent-N"
   ```
 
-  On macOS / Linux: `pkill -f 'tm-(hb|wait)\.sh'`.
+  ```bash
+  # macOS / Linux
+  "<TARGET>/agent-N/.claude/skills/task-kill/tm-kill.sh" \
+      all-for-agent --agent-id "agent-N"
+  ```
+
+  Add `-Mode verify` / `verify` afterwards to confirm zero residual
+  matches.

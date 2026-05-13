@@ -53,8 +53,14 @@ Access the spec with `echo "$SPEC_JSON" | jq -r .prompt`.
 background shell is already pinging `/task_heartbeat` every 10s on your
 behalf. Do NOT launch ANY background script that talks to tm-server
 (no heartbeat, no claim-poll, nothing). Do NOT use Bash with
-`run_in_background`. Do NOT call `KillShell`. You only make foreground
-`tm` calls.
+`run_in_background`. Do NOT call `KillShell` / `TaskStop`. You only
+make foreground `tm` calls.
+
+(Aside on why subagents don't kill anything: `KillShell` / `TaskStop`
+on Windows reports success but doesn't actually kill the OS process —
+see `.claude/skills/task-kill/SKILL.md`. All background-shell
+lifecycle is owned by the parent agent, which uses `task-kill`
+helpers, not `KillShell`.)
 
 When you finish, return a one-line summary string to the parent.
 

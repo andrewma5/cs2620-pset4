@@ -55,7 +55,12 @@ Run the `task-loop` skill (the file is at
    `.claude/skills/task-merging/SKILL.md` based on the task type and
    follow it.
 4. When the subskill finishes (calls `tm complete` or `tm fail`),
-   `KillShell` the heartbeat and continue the outer loop.
+   kill the heartbeat via `task-kill by-task` (see
+   `.claude/skills/task-kill/SKILL.md`) and continue the outer loop.
+   **DO NOT use `KillShell` / `TaskStop` / `/bashes → X`** — on
+   Windows they report success while the underlying bash keeps
+   pinging tm-server. `task-kill` is the only kill mechanism that
+   actually works.
 
 ## Notes
 
@@ -67,7 +72,8 @@ Run the `task-loop` skill (the file is at
 - Two agents may try to claim the same task; the second one will get
   `none:true`. That's expected.
 - A `"fenced"` response means another agent took over your task. Stop
-  immediately, kill the heartbeat, and continue the outer loop.
+  immediately, kill the heartbeat via `task-kill by-task` (NOT
+  `KillShell`), and continue the outer loop.
 - If one replica in `TM_URL_LIST` is down or partitioned, `tm`
   automatically tries the next. Pure 4xx responses (bad payload,
   fenced, not-found) are surfaced as-is and NOT retried — retrying a
@@ -77,3 +83,10 @@ Run the `task-loop` skill (the file is at
 
 Loop until `tm dump | jq '.tasks | map(.status) | unique'` returns
 only `["done"]` (or until the human Ctrl-C's you).
+
+To pause cleanly or simulate a Claude failure, invoke the
+`task-shutdown` skill (`.claude/skills/task-shutdown/SKILL.md`) — it
+calls the `task-kill` helper to actually reap the background shells.
+Do NOT press `x` in `/bashes` or call `KillShell` / `TaskStop` on
+the `tm-hb.sh` / `tm-wait.sh` shells; those mechanisms report
+success but don't kill the OS process on Windows.

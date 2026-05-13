@@ -76,7 +76,8 @@ You will repeat these steps forever:
    background. Save its `bash_id`.
 4. **Dispatch the subskill to a fresh subagent** using the `Agent` tool.
    The subagent does the work and returns a one-line summary.
-5. **KillShell the heartbeat.** Loop.
+5. **Kill the heartbeat OS process via `task-kill by-task`** (NOT
+   `KillShell` — see Step 5 / invariant #6 for why). Loop.
 
 ## Step 1: foreground claim attempt
 
@@ -176,7 +177,8 @@ export TOK=3                 # <-- substitute the actual token
 The script reads `TM_URL_LIST`, `AGENT_ID`, `TASK_ID`, `TOK`,
 `SKILL_DIR` from the env the preamble + these two lines just exported.
 It pings `/task_heartbeat` every 10s (via `tm hb-once`, with replica
-failover) and runs until you `KillShell` it in Step 5.
+failover) and runs until you kill it in Step 5 via `task-kill`
+(not `KillShell`).
 
 Save the returned `bash_id` as `HB_BASH_ID`.
 
@@ -283,15 +285,40 @@ returned summary string and print it:
 [$AGENT_ID] subagent finished <TASK_ID>: <summary>
 ```
 
-## Step 5: kill heartbeat, loop
+## Step 5: kill heartbeat (via task-kill, NOT KillShell), loop
 
 After the subagent returns:
 
-1. Call `KillShell` on `HB_BASH_ID`. This MUST happen even if (especially
-   if) the subagent's summary starts with `FENCED:` — leaving the
-   heartbeat running on a fenced task keeps the lease alive on a token
-   that is no longer the owner, which prevents any other agent from
-   reclaiming the task. The lease MUST be allowed to expire.
+1. **Kill the heartbeat OS process via the `task-kill` skill.** Do NOT
+   use `KillShell` / `TaskStop` — on Windows it reports success while
+   the underlying bash subtree keeps pinging tm-server. See
+   `.claude/skills/task-kill/SKILL.md` for the full failure-mode
+   write-up. The recipe is one tool call:
+
+   **Windows agent** — invoke via the PowerShell tool:
+
+   ```powershell
+   & "$env:TM_WORK\.claude\skills\task-kill\tm-kill.ps1" `
+       -Mode by-task -AgentId $env:AGENT_ID -TaskId $env:TASK_ID
+   ```
+
+   **macOS / Linux agent** — Bash tool:
+
+   ```bash
+   # === STANDARD PREAMBLE ===
+   "$TM_WORK/.claude/skills/task-kill/tm-kill.sh" by-task \
+       --agent-id "$AGENT_ID" --task-id "$TASK_ID"
+   ```
+
+   This kills the actual `tm-hb.sh` bash subtree for `$TASK_ID`. It
+   matches even if (especially if) the subagent's summary starts with
+   `FENCED:` — the orphaned heartbeat would otherwise outlive the
+   task and continue pinging tm-server with a stale token.
+
+   The harness's internal `bash_id` tracking will go stale (no one
+   calls `TaskStop` anymore). That's fine. The OS process is gone;
+   the harness can hold a stale handle harmlessly.
+
 2. Optionally remove the stale claim file (the next claim's response
    is the only source of truth, but cleaning up keeps the dir tidy):
 
@@ -302,7 +329,7 @@ After the subagent returns:
 
 3. Loop back to Step 1.
 
-**The very next Bash tool call after `KillShell HB_BASH_ID` MUST be
+**The very next call after the `task-kill by-task` invocation MUST be
 the Step 1 foreground claim.** Do not read any file, do not consult
 any cached claim, do not "verify" anything — go straight to the next
 `tm claim`.
@@ -315,9 +342,10 @@ has already expired — the SM will then reclaim the task and your next
 real claim will see a fresh token, while you've burned a turn on the
 stale view.
 
-If `WAIT_BASH_ID` is still set from the previous idle wait and is alive
-(it shouldn't be — it exits as soon as it grabs a claim), `KillShell
-WAIT_BASH_ID` too.
+If a previous `tm-wait.sh` bash is somehow still alive (it shouldn't
+be — it self-exits on claim or halt), invoke `task-kill all-for-agent`
+to clean up before re-entering Step 1. Do NOT `KillShell WAIT_BASH_ID`
+for the reasons above.
 
 ## CRITICAL invariants
 
@@ -332,9 +360,9 @@ WAIT_BASH_ID` too.
    call sites read cleanly.
 
 3. **The parent (you) owns ALL tm-* background scripts.** The subagent
-   never starts one and never calls KillShell. If a subagent thinks it
-   needs to poll something — it doesn't. Only the parent runs background
-   loops.
+   never starts one and never invokes `task-kill`. If a subagent
+   thinks it needs to poll something — it doesn't. Only the parent
+   runs background loops.
 
 4. **Background scripts MUST be launched via separate Bash tool calls
    with `run_in_background: true`.** A `( ... ) &` inside one foreground
@@ -343,12 +371,36 @@ WAIT_BASH_ID` too.
 5. **Do not poll `/task_claim` from foreground Bash with `sleep`.** That
    wastes tokens. Always use the backgrounded `tm-wait.sh` script.
 
-6. **KillShell the heartbeat after EVERY task** — every Step 5, no
-   exceptions. Leaving it running between tasks ping-floods tm-server
-   with stale-token heartbeats and clutters the decision log. The
-   scripts do NOT self-terminate when Claude exits, so if you forget
-   `KillShell` and then close Claude, the script keeps running until
-   the human kills it manually.
+6. **Kill the heartbeat after EVERY task via `task-kill by-task` —
+   NOT via `KillShell` / `TaskStop`.** Every Step 5, no exceptions.
+   Leaving the heartbeat running between tasks ping-floods tm-server
+   with stale-token heartbeats.
+
+   **TaskStop alone does not kill the OS process on Windows.** It
+   only marks the bash_id stopped in the harness's bookkeeping; the
+   actual `bash.exe` + `python.exe` subtree keeps running until
+   something kills it at the OS level
+   (anthropics/claude-code#8865, #43944). Empirically (2026-05-13
+   swarm run, traces in
+   `pset4-testing-grounds/revised-replicas-real/`): every Step 5
+   `TaskStop` returned `"Successfully stopped task: ..."` while the
+   underlying bash kept pinging. Orphans accumulated at ~1 per task
+   per agent and only died when a human ran a manual PowerShell
+   sweep.
+
+   The fix is the `task-kill` skill — see
+   `.claude/skills/task-kill/SKILL.md`. Step 5 invokes
+   `tm-kill.{ps1,sh} by-task --agent-id $AGENT_ID --task-id $TASK_ID`
+   which uses `Get-WmiObject Win32_Process` (Windows) or `pkill -f`
+   (POSIX) to actually reap the OS process.
+
+   For end-of-session full teardown (user invoked `/task-shutdown`,
+   no more tasks coming), use the `task-shutdown` skill — it calls
+   `task-kill all-for-agent` plus a `verify` pass.
+
+   The scripts do NOT self-terminate when Claude exits, so closing
+   Claude without running `task-kill` (or `task-shutdown`) leaves
+   the process alive. There is no automatic cleanup.
 
 7. **Subagent returns a summary string, not a transcript.** Tell it so
    in the prompt — the parent's context only ingests one line per task.
@@ -359,8 +411,8 @@ WAIT_BASH_ID` too.
    That file is written by `tm-wait.sh` purely as a vehicle for
    passing one claim from the background-wait into the foreground; it
    is stale the moment Step 4 begins. The mandatory transition out of
-   Step 5 is `KillShell HB_BASH_ID` → fresh foreground `tm claim`,
-   no intermediate steps.
+   Step 5 is `task-kill by-task` → fresh foreground `tm claim`, no
+   intermediate steps.
 
 ## Lease expiry & token bumps
 
@@ -395,10 +447,11 @@ How to avoid it:
 
 ## Handling fenced responses (parent side)
 
-If you ever observe `"ok": false, "error": "fenced"` in any tm call you
-make at the parent level (rare — the parent only calls `tm claim` and
-KillShell), kill the heartbeat and loop. The subagent handles fencing
-inside its own context.
+If you ever observe `"ok": false, "error": "fenced"` in any tm call
+you make at the parent level (rare — the parent only calls `tm claim`
+and `task-kill`), invoke `task-kill by-task` for the current
+`$TASK_ID` and loop. The subagent handles fencing inside its own
+context.
 
 ## Logging
 
